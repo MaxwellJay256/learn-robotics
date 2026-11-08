@@ -178,11 +178,11 @@ bindInputs();
 window.addEventListener('resize', render);
 
 initQuiz({
-  answers: { 1:0, 2:0, 3:0 },
+  answers: { 1:1, 2:0, 3:2 },
   why: {
     1: '第 i 列只被前面 i−1 个关节搬过：\\(\\mathrm{Ad}_{e^{\\hat\\xi_1\\theta_1}\\cdots e^{\\hat\\xi_{i-1}\\theta_{i-1}}}\\xi_i\\)。用整条臂的 \\(g_{st}\\) 是物体雅可比的换算，不是列公式。见 08.1 第 1 小节。',
-    2: '每列都满足 \\(V_s=\\mathrm{Ad}_gV_b\\)，排成矩阵即 \\(J_s=\\mathrm{Ad}_{g_{st}}J_b\\)。见 08.2 第 1 小节。',
-    3: '\\(\\det J_v=l_1l_2\\sin\\theta_2\\)，所以 \\(\\theta_2=0\\)（伸直）与 \\(\\pi\\)（折回）两处降秩。见 08.3 第 2 小节。'
+    2: '按定义 \\(\\det J_v=l_1l_2\\sin\\theta_2=1.3\\times1.0\\times\\sin30^\\circ=0.65\\)。见 08.3 第 2 小节。',
+    3: '\\(\\theta_2=0\\) 时两连杆伸直，两列都垂直于臂，所以末端能沿切向动，不能沿径向动。见 08.3 第 2 小节。'
   }
 });
 

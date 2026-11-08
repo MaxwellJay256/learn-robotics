@@ -7,29 +7,35 @@ import w08_1 from './fragments/08-1.html?raw';
 <Section n="08.0" t="引言" en="FROM JOINT RATES TO TIP VELOCITY">
 <Prose>
 
-### <span className="k">1</span> 关节转多快，末端走多快
+### <span className="k">1</span> 同样的关节速率，末端可能走完全不同的方向
 
-05 把“当前这一刻”的速度写成了 $V$。现在要问的是：这个 $V$ 与关节速率 $\dot\theta$ 是什么关系。答案是一个矩阵：
+想象你在示教器上让两个关节各转 $1$ rad/s，以为末端会沿某个方向匀速前进；换一个姿态，同样的关节速率却让末端几乎不动，或者猛地窜出去。原因很直接：末端速度不只取决于关节转多快，还取决于当前位形。把这两者的关系写成一个矩阵，就是雅可比：
 
 ```math
-V_s=J_s(\theta)\,\dot\theta
+V_s=J_s(\theta)\,\dot\theta.
 ```
 
-$J_s$ 是 $6\times n$ 的雅可比。**它是位形的函数，不是常数**——同一个机械臂，换个姿态，这个矩阵就换一套数。
+$J_s$ 是 $6\times n$ 的矩阵，$n$ 是关节数，$6$ 是末端速度的六个分量。它随位形 $\theta$ 变化；同一个机械臂，换个姿态，这个矩阵就换一套数。
 
-### <span className="k">2</span> 名字的来历
+### <span className="k">2</span> 名字的来历：每一列就是一个关节的贡献
 
-多元微积分里，$y=f(x)$ 的雅可比是偏导矩阵 $\partial y_i/\partial x_j$。这里 $V$ 的六个分量各自对 $n$ 个关节角求偏导，拼起来就是 $J$。所以第 $i$ 列的含义很直接：**只有第 $i$ 个关节以单位速率转、其余不动时，末端的速度**。
+多元微积分里，$y=f(x)$ 的雅可比是偏导矩阵 $\partial y_i/\partial x_j$。这里 $V$ 的六个分量各自对 $n$ 个关节角求偏导，拼起来就是 $J$。所以第 $i$ 列的含义很直接：只有第 $i$ 个关节以单位速率转、其余关节不动时，末端产生的六维速度。换句话说，$J$ 的每一列就是一个关节对末端速度的“贡献方向”，把所有列按关节顺序排好，就得到完整的雅可比。
 
-### <span className="k">3</span> 本节三件事
+### <span className="k">3</span> 本节要造的三件事
 
-<strong>列公式</strong>：不用对 $g$ 求导，每列就是一个被“搬过来”的关节旋量。**物体雅可比**：同一组数在工具系里的版本，两者差一个 $\mathrm{Ad}$。**奇异**：$J$ 降秩的位形——末端某个方向动不了，考试要你用几何语言描述出来。
+<Box title="三件事：列公式、换系、找奇异">
 
-2024 Q3 的 (c)(d) 就是前两件与第三件。
+- <strong>列公式</strong>：不直接对 $g$ 求导，而是把每个关节旋量 $\xi_i$ 用前面关节的变换搬到当前位形，按列排成 $J_s$。
+- <strong>物体雅可比</strong>：同一组列在物体系里的版本 $J_b$，与 $J_s$ 只差一次 $\mathrm{Ad}_{g_{st}}$。
+- <strong>奇异</strong>：$J$ 降秩的位形。末端某个方向动不了；考试要你把代数条件翻译成几何描述。
 
-### <span className="k">4</span> 前置
+</Box>
 
-04 的旋量 $\xi=(v,\omega)$ 与指数、05 的 $\mathrm{Ad}_g$ 与 $V_s/V_b$。这一节没有新数学，只有“把已有的东西按列排好”。
+三件里，第一件是根：列公式写对了，后两件都只是换系和读秩。2024 Q3 的 (c)(d) 就是这三件事的组合。
+
+### <span className="k">4</span> 前置：两条结论，一句话
+
+04 给了关节旋量 $\xi_i=(v_i,\omega_i)$ 与指数 $e^{\hat\xi_i\theta_i}$；05 给了 $\mathrm{Ad}_g$ 和 $V_s=\mathrm{Ad}_gV_b$。本节没有新的数学工具，只有一件事：把已有的旋量按列排成矩阵，再用 $\mathrm{Ad}$ 把整列从零位形搬到当前位形。记不清这两条，先回看 04.1 和 05.3。
 
 </Prose>
 
@@ -44,38 +50,73 @@ $J_s$ 是 $6\times n$ 的雅可比。**它是位形的函数，不是常数**—
 <Section n="08.1" t="空间雅可比" en="SPATIAL JACOBIAN">
 <Prose>
 
-### <span className="k">1</span> 每列一个旋量
+### <span className="k">1</span> 每列一个旋量：从零位形搬到当前位形
 
-第 $i$ 个关节的旋量 $\xi_i$ 是在**零位形**下量的（06 的做法）。当前位形下，它被前面 $i-1$ 个关节的变换搬到了新位置：
+06 的指数积把整条臂写成 $g_{st}(\theta)=e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_n\theta_n}g_{st}(0)$，其中每个 $\xi_i$ 都是在<strong>零位形</strong>下量的关节旋量：方向是关节轴，位置是零位形下轴上的点。问题是，对于 $i\ge2$，当前位形下第 $i$ 根轴已经不在零位形的位置了，它的旋量也跟着变；变多少，只由它前面的 $i-1$ 个关节决定。
 
-```math
-J_s=\begin{bmatrix}\xi_1' & \xi_2' & \cdots & \xi_n'\end{bmatrix},\qquad
-\xi_i'=\mathrm{Ad}_{e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_{i-1}\theta_{i-1}}}\,\xi_i
-```
-
-$\mathrm{Ad}$ 就是 05 的换算器：把旋量从“零位形坐标”搬到“当前位形坐标”。
-
-### <span className="k">2</span> 为什么只受前 $i-1$ 个关节影响
-
-关节 $i$ 的轴挂在它前面的连杆上。后面的关节（$i+1$ 到 $n$）动，不会挪动这根轴；只有前面的关节会把整条臂（连同这根轴）搬走。所以第 $i$ 列里只出现 $\theta_1,\dots,\theta_{i-1}$，**第 1 列永远是零位形的 $\xi_1$**。
-
-这条性质是验算的好工具：算完 $J_s$，检查第 1 列是否还是原始旋量、第 2 列是否只含 $\theta_1$。
-
-### <span className="k">3</span> 平面 2R 的具体形式
-
-两连杆都在平面内，$\xi_1=(0,0,0;\,0,0,1)$、$\xi_2=(0,-l_1,0;\,0,0,1)$。第 2 列被 $e^{\hat\xi_1\theta_1}$ 一搬：
+原因是关节 $i$ 的轴挂在它前面的连杆上。前面的关节动，会把整条子链（连同第 $i$ 根轴）刚体般地搬走；后面的关节 $i+1,\dots,n$ 动，不会挪动这根轴。所以第 $i$ 列只需要用前 $i-1$ 个关节的指数积去搬：
 
 ```math
-\xi_2'=\begin{bmatrix}l_1\sin\theta_1\\ -l_1\cos\theta_1\\ 0\\ 0\\ 0\\ 1\end{bmatrix}
+\xi_i'=\mathrm{Ad}_{e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_{i-1}\theta_{i-1}}}\,\xi_i.
 ```
 
-于是 $J_s=\begin{bmatrix}0 & l_1\sin\theta_1\\ 0 & -l_1\cos\theta_1\\ 0&0\\ 0&0\\ 0&0\\ 1&1\end{bmatrix}$。前两行是线速度、最后一行是角速度——**平面机构的 $J$ 只有三行非零**，这不是巧合，是自由度只有 3。
+这里的 $\mathrm{Ad}$ 就是 05.3 的坐标翻译器：它把零位形坐标下的旋量，翻译成当前位形坐标下的同一个旋量。把所有列按顺序排成矩阵，就得到空间雅可比：
+
+```math
+J_s=\begin{bmatrix}\xi_1' & \xi_2' & \cdots & \xi_n'\end{bmatrix}.
+```
+
+第 1 列没有前序关节，所以 $\xi_1'=\xi_1$，永远是零位形的旋量。这条性质是验算的好工具：算完 $J_s$，先看第 1 列是否还是原始旋量，再看第 2 列是否只含 $\theta_1$。
+
+暂停一下。如果只让第 2 个关节转，末端速度方向由哪一列给出？这一列和零位形的 $\xi_2$ 差了什么？先写下答案，再看下一小节。
+
+### <span className="k">2</span> 平面 2R：把第 2 列转一次
+
+取一个最简单的例子：两根连杆都在 $xy$ 平面内，关节轴都沿 $z$。零位形下，第 1 根轴过原点，第 2 根轴过 $(l_1,0,0)$，所以
+
+```math
+\xi_1=(0,0,0;\,0,0,1),\qquad
+\xi_2=(0,-l_1,0;\,0,0,1).
+```
+
+第 2 列要被 $e^{\hat\xi_1\theta_1}$ 搬一次。这是一个绕 $z$ 轴转 $\theta_1$ 的纯旋转；$\omega=(0,0,1)$ 正好沿转轴，所以角速度部分不变，只有线速度部分被转动：
+
+```math
+\xi_2'=\mathrm{Ad}_{e^{\hat\xi_1\theta_1}}\xi_2
+=\begin{bmatrix}l_1\sin\theta_1\\-l_1\cos\theta_1\\0\\0\\0\\1\end{bmatrix}.
+```
+
+于是
+
+```math
+J_s=\begin{bmatrix}
+0 & l_1\sin\theta_1\\
+0 & -l_1\cos\theta_1\\
+0 & 0\\
+0 & 0\\
+0 & 0\\
+1 & 1
+\end{bmatrix}.
+```
+
+前两行是线速度，最后一行是角速度，中间三行全零。平面机构只有 $x,y$ 平移和绕 $z$ 转动三个自由度，所以 $6\times n$ 的雅可比里只有这三行有内容；这不是巧合，是自由度被限制在平面内的结果。
+
+走一组数：取 $l_1=1.3$、$\theta_1=30^\circ$，第 2 列是 $(1.3\sin30^\circ,-1.3\cos30^\circ,0,0,0,1)=(0.65,-1.126,0,0,0,1)$。代入 $\theta_1=0^\circ$，第 2 列回到 $(0,-1.3,0,0,0,1)$；代入 $\theta_1=90^\circ$，它变成 $(1.3,0,0,0,0,1)$。第 2 列的线速度部分，就是零位形下的 $(0,-l_1,0)$ 被 $\theta_1$ 旋转后的结果。
 
 <Box warn title="常见错误">
 
-- 用 $g_{st}$ 去乘 $\xi_i$。搬运要用“前 $i-1$ 个关节的指数积”，不是整条臂的 $g$。
-- 第 1 列也乘一遍。零位形没有前序关节，第 1 列就是 $\xi_1$ 本身。
-- 把 $\mathrm{Ad}$ 写成 $6\times6$ 全乘。平面情形只需转 $v$ 与 $\omega$，手算时按 $3\times3$ 块做就够。
+- 用整条臂的 $g_{st}$ 去乘 $\xi_i$。列公式只用前 $i-1$ 个关节的指数积；用 $g_{st}$ 是 08.2 的物体雅可比换算，场景不同。
+- 让第 1 列也乘一遍。零位形没有前序关节，第 1 列就是 $\xi_1$ 本身。
+- 把 $\mathrm{Ad}$ 当成 $3\times3$ 旋转。旋量是六维的，$\mathrm{Ad}$ 是 $6\times6$；平面情形可以按 $3\times3$ 块手算，但要知道自己乘的是哪个块。
+- 忘记 $\xi_i$ 是零位形量。当前位形的轴已经变了，不能直接把 $\xi_i$ 当第 $i$ 列。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- $J_s$ 的第 1 列为什么不含任何 $\theta$？
+- 第 $i$ 列为什么只受前 $i-1$ 个关节影响？
+- 平面 2R 的 $J_s$ 有几行非零，为什么？
 
 </Box>
 
@@ -85,27 +126,38 @@ $\mathrm{Ad}$ 就是 05 的换算器：把旋量从“零位形坐标”搬到�
 <Section n="08.2" t="物体雅可比" en="BODY JACOBIAN">
 <Prose>
 
-### <span className="k">1</span> 同一组数，换个参考系
+### <span className="k">1</span> 同一组列，换到物体系
 
-$J_b$ 的列是**在工具系里表达的**关节旋量。换算关系只有一条：
+$J_b$ 的列是在物体系里表达的关节旋量。05.3 已经给出 $V_s=\mathrm{Ad}_{g_{st}}V_b$：同一个六维速度，从物体系读数换成空间系读数，用的就是 $\mathrm{Ad}_{g_{st}}$。这条关系对每一个关节单独成立，所以对整列也成立；把每一列都换过去，再按列排成矩阵，就得到
 
 ```math
-J_s=\mathrm{Ad}_{g_{st}}\,J_b
+J_s=\mathrm{Ad}_{g_{st}}\,J_b.
 ```
 
-因为 $V_s=\mathrm{Ad}_{g}V_b$ 对每一列都成立，把列排成矩阵就得到这条。反过来 $J_b=\mathrm{Ad}_{g^{-1}}J_s$。
+注意 $\mathrm{Ad}_{g_{st}}$ 是 $6\times6$，它左乘整个 $6\times n$ 的 $J_b$，不是只乘某一列；矩阵乘法逐列作用，所以“每一列都换系”和“整个矩阵换系”是同一件事。反过来，$J_b=\mathrm{Ad}_{g^{-1}}J_s$，因为 $\mathrm{Ad}_{g^{-1}}=(\mathrm{Ad}_g)^{-1}$。
 
 ### <span className="k">2</span> 什么时候用哪个
 
-题目问“空间速度/空间雅可比”就用 $J_s$；问“物体速度/物体雅可比”就用 $J_b$。两者只差一次换算，**考试里先算一个，另一个用 $\mathrm{Ad}$ 换**，比重新推一遍快得多，也不容易错。
+题目问“空间速度/空间雅可比”就用 $J_s$，问“物体速度/物体雅可比”就用 $J_b$。两者只差一次换算，所以考试里先算一个，另一个用 $\mathrm{Ad}$ 换，比重新推一遍快，也不容易错。2024 Q2 的 (b)(c) 就是这种关系：算完 $V_s$，$V_b$ 用 $\mathrm{Ad}_{g^{-1}}$ 一步得到；雅可比同理。
 
-2024 Q2 的 (b)(c) 就是这种关系：算完 $V_s$，$V_b$ 用 $\mathrm{Ad}_{g^{-1}}$ 一步得到。
+举个最小的数：取 $g$ 为绕 $z$ 轴转 $90^\circ$、平移为零。如果 $J_b$ 的某一列是 $(0,1,0,0,0,1)$，那么 $\mathrm{Ad}_g$ 把线速度部分 $(0,1,0)$ 转成 $(-1,0,0)$，角速度部分 $(0,0,1)$ 不变，所以 $J_s$ 的对应列是 $(-1,0,0,0,0,1)$。整列换系，逐列做，就是矩阵乘法。
+
+暂停一下。如果题目问的是物体速度，应该先算 $J_s$ 还是 $J_b$？为什么两者只差一次 $\mathrm{Ad}$？先回答，再看下一节。
+
+<Box warn title="常见错误">
+
+- 把 $J_s=\mathrm{Ad}_{g_{st}}J_b$ 写成 $J_b=\mathrm{Ad}_{g_{st}}J_s$。方向反了；从物体系到空间系用 $\mathrm{Ad}_g$，换回去用 $\mathrm{Ad}_{g^{-1}}$。
+- 把 $\mathrm{Ad}$ 乘在右边。$J_b$ 是 $6\times n$，$\mathrm{Ad}$ 是 $6\times6$，只能左乘；写成 $J_b\,\mathrm{Ad}$ 在 $n\neq6$ 时连维度都不对。
+- 把 $g_{st}$ 当成常数。它随位形变，所以 $J_s$ 和 $J_b$ 也随位形变。
+- 只换线速度、不换角速度。$\mathrm{Ad}$ 同时作用在两块上。
+
+</Box>
 
 <Box title="离开本节前，合上文字回答">
 
-- $J_s$ 的第 1 列为什么不含任何 $\theta$？
-- 已知 $J_b$，怎么得到 $J_s$？
-- 平面 2R 的 $J_s$ 有几行非零，为什么？
+- 已知 $J_b$，怎么得到 $J_s$？换回去呢？
+- 为什么 $\mathrm{Ad}$ 要左乘整个 $6\times n$ 矩阵，而不是逐列乘一个 $3\times3$？
+- 如果题目问物体速度，先算 $J_s$ 还是 $J_b$？为什么？
 
 </Box>
 
@@ -115,38 +167,47 @@ J_s=\mathrm{Ad}_{g_{st}}\,J_b
 <Section n="08.3" t="奇异与可操作性" en="SINGULARITIES">
 <Prose>
 
-### <span className="k">1</span> 奇异 = $J$ 降秩
+### <span className="k">1</span> 奇异 = $J$ 降秩，不等于“不能动”
 
-$V=J\dot\theta$。如果 $J$ 的列不满秩，就存在某个方向的速度**无论关节怎么转都产生不了**——这个位形叫奇异位形。数学上是 $\det J=0$（方阵）或秩 $<6$（一般情形）。
+$V=J\dot\theta$ 把关节速率映射成末端速度。如果 $J$ 的列不满秩，就存在某个方向的速度，无论关节怎么转都产生不了——这个位形叫奇异位形。数学上是 $\det J=0$（方阵）或秩小于该机构的最大可能秩（6R 是 6，平面 2R 是 2）。要注意，奇异不等于“末端完全不能动”：大多数方向仍然能动，只是少了一个方向；而且接近奇异时，某些关节速率会被放大成很大的末端速度，实际控制里要避开。
 
 ### <span className="k">2</span> 平面 2R：一个 $\sin$ 就够
 
-末端位置 $p=(l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2),\ l_1\sin\theta_1+l_2\sin(\theta_1+\theta_2))$，对两个角求偏导拼成 $2\times2$：
+末端位置 $p=(l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2),\;l_1\sin\theta_1+l_2\sin(\theta_1+\theta_2))$。对两个角求偏导，拼成 $2\times2$ 的线速度雅可比：
 
 ```math
-J_v=\begin{bmatrix}-l_1\sin\theta_1-l_2\sin(\theta_1+\theta_2) & -l_2\sin(\theta_1+\theta_2)\\
-l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2) & l_2\cos(\theta_1+\theta_2)\end{bmatrix},\qquad
-\det J_v=l_1l_2\sin\theta_2
+J_v=\begin{bmatrix}
+-l_1\sin\theta_1-l_2\sin(\theta_1+\theta_2) & -l_2\sin(\theta_1+\theta_2)\\
+l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2) & l_2\cos(\theta_1+\theta_2)
+\end{bmatrix},
+\qquad
+\det J_v=l_1l_2\sin\theta_2.
 ```
 
-$\theta_2=0$：两条连杆伸直；$\theta_2=\pi$：折回重合。两种都是“两列平行”，末端只能沿垂直于臂的方向动，径向动不了。
+行列式只依赖 $\theta_2$，所以奇异条件只有两个：$\theta_2=0$（两连杆伸直）和 $\theta_2=\pi$（折回重合）。这两处两列平行，末端只能沿垂直于臂的方向动，径向动不了。取 $l_1=1.3$、$l_2=1.0$：$\theta_2=30^\circ$ 时 $\det J_v=0.65$；$\theta_2=90^\circ$ 时 $\det J_v=1.3$；$\theta_2\to0$ 时 $\det J_v\to0$。行列式的大小可以当作“离奇异有多远”的粗指标。
+
+暂停一下。$\det J_v$ 只依赖 $\theta_2$，那改变 $\theta_1$ 会不会让机器人接近奇异？先回答，再看下一节。
 
 ### <span className="k">3</span> 6R 的三类几何情形
 
 考试要的是几何描述，不是代数条件。三类最常见：
 
-<strong>① 两关节共轴</strong>——两根轴重合，两个关节产生同一个运动，秩少 1。<strong>② 三根平行轴共面</strong>——三列线性相关，臂展成一条直线时就是这种。<strong>③ 四根轴汇交于一点</strong>——腕部的球腕在“手腕奇点”，两个转动退化成同一个。
+1. <strong>两关节共轴</strong>：两根轴重合，两个关节产生同一个运动，秩少 1。答的时候要指出是哪两个关节。
+2. <strong>三根平行轴共面</strong>：三列线性相关；臂展成一条直线时就是这种。答的时候要指出是哪三根轴、怎么共面。
+3. <strong>四根轴汇交于一点</strong>：腕部的球腕在“手腕奇点”，两个转动退化成同一个。答的时候要指出汇交点。
 
-答法：先写 $\det J=0$ 或“某两列线性相关”，再翻译成上面三种之一，最后指出是哪几个关节。
+答法固定三步：先写 $\det J=0$ 或“某两列线性相关”，再翻译成上面三种之一，最后指出是哪几个关节、哪几根轴。
 
-### <span class="k">4</span> 可操作性：离奇异有多远
+### <span className="k">4</span> 可操作性：离奇异有多远
 
-$\mu_2=\sigma_{\min}/\sigma_{\max}$（$J$ 的奇异值之比）。$\mu_2=1$ 最好，$\to0$ 说明接近奇异——此时关节速度稍大，末端速度就爆掉，实际控制里要避开。
+$\mu_2=\sigma_{\min}/\sigma_{\max}$ 是 $J$ 的最小奇异值与最大奇异值之比。$\mu_2=1$ 说明各个方向的速度传递一样好；$\mu_2\to0$ 说明已经接近奇异——此时关节速度稍大，末端速度就可能爆掉，实际控制里要避开。它衡量的是速度传递的好坏，不是末端能不能到达某个点；可达性是另一件事，别混。
+
+读图之前先猜一件事：把 $\theta_2$ 调到 $0^\circ$，看 $J_v$ 的两列是否平行、$\det$ 是否变成 0；再把 $\theta_2$ 调到 $90^\circ$，看 $\det$ 和 $\mu_2$ 怎么变。图里的红列是“只转关节 1”的贡献方向，灰列是“只转关节 2”的贡献方向；两列平行时，末端就少了一个可动方向。
 
 <Box warn title="常见错误">
 
-- 只说“$\det J=0$”不翻译成几何。题目要的是“哪几根轴怎么了”。
-- 把奇异当成“末端不能动”。是一个方向不能动，其余方向仍能动。
+- 只说“$\det J=0$”不翻译成几何。题目要的是“哪几根轴怎么了”，不是一行代数。
+- 把奇异当成“末端不能动”。是一个方向不能动，其余方向仍能动；接近奇异时末端速度还可能很大。
 - 用 $\mu_2$ 判断“能不能到”。它衡量的是速度传递的好坏，不是可达性。
 
 </Box>
@@ -154,12 +215,24 @@ $\mu_2=\sigma_{\min}/\sigma_{\max}$（$J$ 的奇异值之比）。$\mu_2=1$ 最�
 </Prose>
 
 <Raw html={w08_1} />
+
+<Prose>
+
+<Box title="离开本节前，合上文字回答">
+
+- 平面 2R 的两个奇异位形分别是什么？用“两列平行”解释。
+- 奇异时末端是完全不能动吗？如果不是，是哪个方向动不了？
+- $\mu_2$ 衡量的是什么？它和“能不能到达”有什么区别？
+
+</Box>
+
+</Prose>
 </Section>
 
 <Section n="08.4" t="小测" en="CHECK">
 <Prose>
 
-<strong>规则。</strong>三题，覆盖列公式、换算、奇异。做完即时反馈，解析指回对应小节。
+<strong>规则。</strong>三题分别检查列公式、2R 的奇异条件、奇异方向的几何描述。每题做完立刻给反馈，解析里会指出该回看的小节；错一题就回去把那一段重读一遍，再回来做，不要只看答案。
 
 </Prose>
 
@@ -167,29 +240,29 @@ $\mu_2=\sigma_{\min}/\sigma_{\max}$（$J$ 的奇异值之比）。$\mu_2=1$ 最�
   <div className="q" data-q="1">
     <div className="qhead"><span className="qn">Q1</span><span className="qt">$J_s$ 的第 $i$ 列是？</span></div>
     <div className="opts">
-      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\mathrm{Ad}_{e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_{i-1}\theta_{i-1}}}\xi_i$</label>
       <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\mathrm{Ad}_{g_{st}}\xi_i$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\mathrm{Ad}_{e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_{i-1}\theta_{i-1}}}\xi_i$</label>
       <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\xi_i$ 本身</label>
     </div>
     <div className="explain" data-for="1"></div>
   </div>
 
   <div className="q" data-q="2">
-    <div className="qhead"><span className="qn">Q2</span><span className="qt">$J_s$ 与 $J_b$ 的关系是？</span></div>
+    <div className="qhead"><span className="qn">Q2</span><span className="qt">取 $l_1=1.3$、$l_2=1.0$、$\theta_2=30^\circ$，平面 2R 的 $\det J_v$ 等于？</span></div>
     <div className="opts">
-      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$J_s=\mathrm{Ad}_{g_{st}}J_b$</label>
-      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$J_s=J_b\mathrm{Ad}_{g_{st}}$</label>
-      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$J_s=J_b$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$0.65$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$1.3$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$0$</label>
     </div>
     <div className="explain" data-for="2"></div>
   </div>
 
   <div className="q" data-q="3">
-    <div className="qhead"><span className="qn">Q3</span><span className="qt">平面 2R 的奇异位形是？</span></div>
+    <div className="qhead"><span className="qn">Q3</span><span className="qt">$\theta_2=0$（两连杆伸直）时，末端哪个方向动不了？</span></div>
     <div className="opts">
-      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\theta_2=0$ 或 $\pi$（两连杆共线）</label>
-      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\theta_1=0$</label>
-      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\theta_2=\pi/2$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>切向（垂直于臂）</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>任意方向</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>径向（沿臂）</label>
     </div>
     <div className="explain" data-for="3"></div>
   </div>
