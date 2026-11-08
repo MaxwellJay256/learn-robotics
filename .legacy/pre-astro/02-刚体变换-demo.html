@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器人学导论 · 02 刚体变换 — 交互式学习平台</title>
+<style>
+  /* ===== 瑞士国际主义风格：Helvetica / 网格 / 单一红 / 细线 ===== */
+  :root{
+    --ink:#111;
+    --paper:#fff;
+    --red:#E30613;
+    --gray:#8a8a8a;
+    --hair:#d9d9d9;
+    --soft:#f4f4f2;
+    --mono:"Courier New",Courier,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:"Helvetica Neue",Helvetica,"Arial Nova",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink);background:var(--paper);
+    font-size:16px;line-height:1.55;
+  }
+  .page{max-width:1180px;margin:0 auto;padding:0 28px 90px}
+
+  /* ---------- 页眉 ---------- */
+  header{padding:34px 0 20px;border-bottom:3px solid var(--ink);position:relative}
+  .kicker{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);margin-bottom:14px}
+  .kicker .sq{width:14px;height:14px;background:var(--red);display:inline-block}
+  h1{font-size:clamp(34px,5.4vw,58px);font-weight:700;letter-spacing:-.02em;line-height:1.04;text-transform:none}
+  h1 .en{display:block;font-weight:400;font-size:.42em;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);margin-top:10px}
+  .meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:18px;font-size:12.5px;color:var(--ink)}
+  .meta b{font-weight:700}
+  .meta span{border-top:1px solid var(--ink);padding-top:6px}
+
+  /* ---------- 章节骨架 ---------- */
+  section{padding:44px 0 8px;border-bottom:1px solid var(--hair)}
+  .secno{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+  .secno .n{font-size:44px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+  .secno .t{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);font-weight:700}
+  .secno .t em{color:var(--gray);font-style:normal;font-weight:400;margin-left:10px;letter-spacing:.1em}
+  .lede{max-width:62ch;font-size:15px;color:var(--ink);margin:6px 0 26px}
+  .lede b{background:linear-gradient(transparent 62%, #ffd9db 62%)}  /* 荧光笔强调 */
+
+  /* ---------- 双栏工作区 ---------- */
+  .work{display:grid;grid-template-columns:minmax(0,7fr) minmax(320px,5fr);gap:34px;align-items:start}
+  @media(max-width:920px){.work{grid-template-columns:1fr}}
+  .canvasbox{border:1px solid var(--ink);position:relative;background:var(--paper)}
+  canvas{display:block;width:100%;height:auto;cursor:grab;touch-action:none}
+  .canvasbox .cap{
+    position:absolute;left:0;bottom:0;right:0;display:flex;justify-content:space-between;
+    padding:8px 12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    border-top:1px solid var(--ink);background:var(--paper);color:var(--ink);pointer-events:none}
+  .canvasbox .cap .hint{color:var(--gray);text-transform:none;letter-spacing:.02em}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  button{
+    font-family:inherit;font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+    padding:10px 16px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);
+    cursor:pointer;transition:background .12s,color .12s}
+  button:hover{background:var(--ink);color:var(--paper)}
+  button:active{background:var(--red);border-color:var(--red);color:#fff}
+  button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  button.primary{background:var(--ink);color:var(--paper)}
+  button.primary:hover{background:var(--red);border-color:var(--red)}
+
+  /* ---------- 数学面板 ---------- */
+  .panel{display:flex;flex-direction:column;gap:0}
+  .pblock{border-top:1px solid var(--ink);padding:16px 0 22px}
+  .pblock:first-child{border-top:none;padding-top:0}
+  .plabel{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline}
+  .plabel .val{font-family:var(--mono);font-size:12px;color:var(--red);letter-spacing:0;text-transform:none;font-weight:400}
+  .eq{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:15px}
+  .eq .op{color:var(--gray)}
+  var{font-style:italic}
+  sub,sup{font-size:.68em}
+
+  /* 矩阵：CSS 方括号 */
+  .mat{display:inline-grid;grid-auto-flow:row;position:relative;padding:4px 9px;margin:0 1px;vertical-align:middle}
+  .mat::before,.mat::after{content:"";position:absolute;top:0;bottom:0;width:7px;border:1.6px solid var(--ink)}
+  .mat::before{left:0;border-right:none}
+  .mat::after{right:0;border-left:none}
+  .mat .r{display:grid;grid-auto-flow:column;justify-items:center}
+  .mat .c{min-width:3.1em;text-align:center;font-family:var(--mono);font-size:14px;padding:2px 3px;font-style:normal}
+  .mat .c.c1{color:var(--red)}      /* 第一列 = b1 */
+  .mat .c.c2{color:#555}            /* 第二列 = b2 */
+  .mat.small .c{min-width:2.6em;font-size:13px}
+
+  /* 算术流水：线性代数的工作过程 */
+  .pipeline{font-family:var(--mono);font-size:13.5px;line-height:2.05;background:var(--soft);padding:14px 16px;margin-top:14px;overflow-x:auto}
+  .pipeline .row{white-space:nowrap}
+  .pipeline .k{color:var(--red)}
+  .pipeline .cm{color:var(--gray)}
+  .pipeline .res{border-top:1px solid var(--ink);display:inline-block;padding-top:2px;margin-top:2px}
+  .note{font-size:13px;color:var(--gray);margin-top:10px;max-width:52ch}
+  .note b{color:var(--ink)}
+
+  /* ---------- 教学文段：编号段落 + 自检清单 ---------- */
+  .prose{max-width:74ch;display:flex;flex-direction:column;gap:15px;margin:4px 0 32px;counter-reset:pn}
+  .prose p{counter-increment:pn;position:relative;padding-left:38px;font-size:15.5px}
+  .prose p::before{
+    content:counter(pn,decimal-leading-zero);
+    position:absolute;left:0;top:3px;
+    font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--red)}
+  .goals{border-top:1px solid var(--ink);margin:30px 0 10px;max-width:74ch}
+  .goals li{list-style:none;display:flex;gap:14px;align-items:flex-start;padding:10px 2px;border-bottom:1px solid var(--hair);font-size:14px}
+  .goals .chk{width:12px;height:12px;border:1.5px solid var(--ink);flex:none;margin-top:5px}
+  .goals b{font-weight:700}
+  .mat.sym .c{min-width:2.4em;font-family:inherit;font-size:14.5px}
+  .mat.sym .c.g{color:var(--gray)}
+
+  /* 高亮列说明条 */
+  .legend{display:flex;gap:22px;font-size:12px;margin-top:10px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px}
+  .legend .l1 i{background:var(--red)} .legend .l2 i{background:#555}
+
+  /* ---------- 小测 ---------- */
+  .quiz{max-width:820px}
+  .q{border-top:1px solid var(--ink);padding:26px 0 30px}
+  .q:last-of-type{border-bottom:1px solid var(--ink)}
+  .qhead{display:flex;gap:14px;align-items:baseline;margin-bottom:14px}
+  .qhead .qn{font-size:15px;font-weight:700;color:var(--red);letter-spacing:.05em;white-space:nowrap}
+  .qhead .qt{font-size:16.5px}
+  .qt code{font-family:var(--mono);background:var(--soft);padding:1px 6px}
+  .opts{display:flex;flex-direction:column;gap:0;margin-top:6px}
+  .opt{
+    display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border:1px solid var(--hair);
+    border-bottom:none;background:var(--paper);cursor:pointer;font-size:14.5px;transition:background .12s}
+  .opt:last-child{border-bottom:1px solid var(--hair)}
+  .opt:hover{background:var(--soft)}
+  .opt .tick{width:15px;height:15px;border:1.5px solid var(--ink);flex:none;margin-top:4px;position:relative}
+  .opt input{position:absolute;opacity:0;pointer-events:none}
+  .opt .m{font-family:var(--mono);font-size:13.5px;line-height:1.7}
+  .opt .m .c{display:inline-block;min-width:2.6em;text-align:center}
+  .opt.chosen{border-color:var(--ink);background:var(--soft)}
+  .opt.chosen .tick{background:var(--ink)}
+  .opt.right{border-color:var(--red);background:#fdeef0}
+  .opt.right .tick{background:var(--red);border-color:var(--red)}
+  .opt.wrong{background:var(--soft);color:var(--gray)}
+  .opt.locked{cursor:default;pointer-events:none}
+  .opt.right .tick::after{content:"";position:absolute;inset:3px;background:#fff}
+  .explain{display:none;margin-top:14px;border-left:3px solid var(--red);padding:10px 16px;background:var(--soft);font-size:13.5px}
+  .explain.show{display:block}
+  .score{display:flex;align-items:baseline;gap:14px;margin:22px 0 4px}
+  .score .big{font-size:40px;font-weight:700;letter-spacing:-.03em}
+  .score .of{font-size:13px;color:var(--gray);letter-spacing:.12em;text-transform:uppercase}
+
+  /* ---------- 页脚 ---------- */
+  footer{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:14px;padding-top:26px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray)}
+  footer .next{cursor:pointer;background:none;border:none;color:var(--ink);font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:8px 0 2px;border-bottom:2px solid var(--red)}
+  footer .next:hover{background:none;color:var(--red)}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="kicker"><span class="sq"></span>机器人学导论 · 交互式学习平台</div>
+    <h1>02 刚体变换<span class="en">Rigid-Body Transformations — 旋转 · 平移 · 齐次坐标</span></h1>
+    <div class="meta">
+      <span><b>知识清单</b>　K00a–K02</span>
+      <span><b>考试对应</b>　2024 Q1(a)(b)</span>
+      <span><b>体系</b>　李泽湘 / MLS 第 2 章</span>
+    </div>
+  </header>
+
+  <!-- ============ 02.0 引言 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.0</span><span class="t">引言<em>WHY FRAMES — 从质点到刚体</em></span></div>
+    <div class="prose">
+      <p><b>质点只要三个数。</b>描述空间中一个质点，坐标 (x, y, z) 就足够。机器人连杆是<b>刚体</b>：它上面任意两点的距离永远不变。于是"它在哪"不再够用——还必须回答<b>"它朝哪"</b>。位置加姿态，一共六个自由度。</p>
+      <p><b>手段：装两个坐标系。</b>一个固结在参考空间，记作 <var>A</var>（空间系）；一个固结在刚体上，记作 <var>B</var>（物体系），随刚体一起运动。此后<b>"B 相对 A 的关系"这一个数学对象，就完整携带了刚体的位置与姿态</b>——本章全部内容都长在这个对象上。</p>
+      <p><b>本章只做三件事。</b>B 相对 A 只转了 → 旋转矩阵 <var>R</var>（02.1）；B 又转又移 → 齐次变换 <var>g</var>（02.2）；反过来问 A 相对 B → <var>g</var> 的逆（02.2 内）。速度、力，以及整门课的指数积正运动学，全部以这两个对象为地基。</p>
+    </div>
+    <ul class="goals">
+      <li><span class="chk"></span><span>学完 02.1 能说出：<b>R 的每一列是什么</b>，并解释为什么 <var>R</var><sup>−1</sup> = <var>R</var><sup>T</sup></span></li>
+      <li><span class="chk"></span><span>学完 02.2 能写出：<b>g 的结构</b>，并推出 <var>g</var><sup>−1</sup> = [ <var>R</var><sup>T</sup>　−<var>R</var><sup>T</sup><var>p</var> ; 0　1 ]</span></li>
+      <li><span class="chk"></span><span>小测 02.3 三题至少对两题——错题编号会汇入备考计划的错题记录</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 02.1 旋转矩阵 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.1</span><span class="t">旋转矩阵<em>ROTATION MATRIX</em></span></div>
+    <div class="prose">
+      <p><b>装两个坐标系。</b><var>A</var> 固结在地面（空间系，黑色轴 <var>x</var><sub>ᴀ</sub> <var>y</var><sub>ᴀ</sub>），<var>B</var> 固结在刚体上（物体系，红色 <var>x</var><sub>ʙ</sub>、灰色 <var>y</var><sub>ʙ</sub>）。此后"刚体的姿态"这句话翻译成数学就是：<b>B 的两根轴各自指向 A 中的哪个方向</b>。</p>
+      <p><b>把姿态写成矩阵。</b><var>x</var><sub>ʙ</sub> 在 A 中的坐标是 (cos θ, sin θ)，放进第 1 列；<var>y</var><sub>ʙ</sub> 的坐标 (−sin θ, cos θ) 放进第 2 列。这个 2×2 矩阵就是旋转矩阵 <var>R</var>。拖动红色手柄，右侧矩阵逐项联动——<b>矩阵不是抽象表格，它就是那两根箭头的坐标</b>。</p>
+      <p><b>它同时是坐标变换。</b>点 q 固结在刚体上：它在 B 中的坐标 <var>q</var><sup>ʙ</sup> 不随运动改变，改变的是它在 A 中的坐标。同一个箭头既可以写成"B 的基向量 × <var>q</var><sup>ʙ</sup>"，也可以写成"A 的基向量 × <var>q</var><sup>ᴀ</sup>"——两边说的是同一个向量，对照系数即得 <b><var>q</var><sup>ᴀ</sup> = <var>R</var> <var>q</var><sup>ʙ</sup></b>。下方算术流水把这个乘法拆到每一次乘法与加法。</p>
+      <p><b>三条性质，考题源头。</b>列是正交单位向量 → <var>R</var><sup>T</sup><var>R</var> = <var>I</var> 且 det <var>R</var> = 1（刚体运动不许出现镜像）；于是<b>逆 = 转置</b>，二维求逆零成本；复合 <var>R</var><sub>AC</sub> = <var>R</var><sub>AB</sub> <var>R</var><sub>BC</sub>，下标首尾相接才能相乘，顺序不可交换。</p>
+      <p><b>操作。</b>拖红色手柄旋转；拖黑点 q 改变它的物体系坐标；点「转到 90°」后核对第 1 列变成 (0, 1)。</p>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>Frame B in Frame A</span><span class="hint">◎ 红色手柄 = 旋转　▪ 黑色原点 = 拖动点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim1">从零位形演示</button>
+          <button id="snap90">转到 90°</button>
+          <button id="snap180">转到 180°</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>当前旋转矩阵</span><span class="val" id="thetaOut">θ = 0°</span></div>
+          <div class="eq">
+            <var>R</var><sub class="op">AB</sub>
+            <span class="mat" id="Rmat"></span>
+          </div>
+          <div class="legend">
+            <span class="l1"><i></i>第 1 列 = <var>x<sub>B</sub></var> 在 A 中的坐标</span>
+            <span class="l2"><i></i>第 2 列 = <var>y<sub>B</sub></var> 在 A 中的坐标</span>
+          </div>
+          <p class="note"><b>正交性</b>：<var>R</var><sup>T</sup><var>R</var> = <var>I</var>，det <var>R</var> = 1（拖动时始终成立）。
+          逆 = 转置：<var>R</var><sup>−1</sup> = <var>R</var><sup>T</sup>。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>矩阵如何作用于点 · 算术流水</span><span class="val" id="qOut">qᴮ = ( 1.0, 0.6 )</span></div>
+          <div class="pipeline" id="pipe1"></div>
+          <p class="note">黑色点 <var>q</var> 固结在刚体上。拖动它——它在 <var>B</var> 系里的坐标 <var>q</var><sup>B</sup> 改变；
+          转动手柄——<var>q</var><sup>B</sup> 不变，只有 <var>R</var> 变。<b>这就是坐标变换的全部工作过程。</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02.2 刚体变换 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.2</span><span class="t">刚体变换 g<em>HOMOGENEOUS TRANSFORM</em></span></div>
+    <div class="prose">
+      <p><b>R 有个隐藏前提。</b><var>q</var><sup>ᴀ</sup> = <var>R</var> <var>q</var><sup>ʙ</sup> 只在 B 的原点与 A 的原点<b>重合</b>时成立。机械臂各连杆的坐标系原点散布在空间各处，这个前提几乎从不满足。</p>
+      <p><b>修补：先转再移。</b>让刚体先随 B 旋转，再把 B 的原点平移到 <var>p</var><sub>AB</sub>（B 原点在 A 中的位置）：<var>q</var><sup>ᴀ</sup> = <var>R</var> <var>q</var><sup>ʙ</sup> + <var>p</var><sub>AB</sub>。位置与姿态，一个式子同时携带。</p>
+      <p><b>齐次坐标的机关。</b>矩阵乘法里没有"加法"的位置——于是把点升一维写成 [ q ; 1 ]，把 <var>R</var> 与 <var>p</var> 打包成 3×3 的 <var>g</var>，底行 [ 0 0 1 ] 让"乘 1"原样通过、让加法自动发生：<b>[ <var>q</var><sup>ᴀ</sup> ; 1 ] = <var>g</var> [ <var>q</var><sup>ʙ</sup> ; 1 ]</b>。看懂底行，齐次变换就不再神秘。</p>
+      <p><b>复合自然成立。</b><var>g</var><sub>AC</sub> = <var>g</var><sub>AB</sub> <var>g</var><sub>BC</sub>，与 R 的复合同构。记住这个连乘的样子——下一节的指数积公式 g(θ) = e 的连乘，就是它的连续版。</p>
+      <p><b>求逆 = 2024 Q1(a) 原题。</b><var>g</var><sup>−1</sup> 描述 A 相对 B：姿态部分取逆 → <var>R</var><sup>T</sup>；A 原点在 B 中的位置 → 先用 <var>R</var><sup>T</sup> 把 <var>p</var><sub>AB</sub> 转到 B 的方向，再取反 → −<var>R</var><sup>T</sup><var>p</var>。合起来 <b><var>g</var><sup>−1</sup> = [ <var>R</var><sup>T</sup>　−<var>R</var><sup>T</sup><var>p</var> ; 0　1 ]</b>，右侧面板实时验证。</p>
+      <p><b>操作。</b>拖 B 原点平移——只有第 3 列动；拖红色手柄旋转——只有左上 2×2 块动。g 的两块各管各的，这就是"打包"的含义。</p>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv2" width="860" height="520"></canvas>
+          <div class="cap"><span>g = ( R , p )</span><span class="hint">◎ 旋转手柄　◎ B 原点 = 平移　▪ 点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim2">从零位形演示</button>
+          <button id="reset2">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>齐次变换矩阵 · 结构 → 实时数值</span><span class="val" id="gOut">g live</span></div>
+          <div class="eq">
+            <var>g</var><sub class="op">AB</sub>
+            <span class="mat sym">
+              <span class="r"><span class="c c1"><i>R</i></span><span class="c"><i>p</i></span></span>
+              <span class="r"><span class="c g">0</span><span class="c g">1</span></span>
+            </span>
+            <span class="op">→</span>
+            <span class="mat" id="Gmat"></span>
+          </div>
+          <p class="note">底行的 0 0 1 就是让加法自动发生的机关。拖原点时只有第 3 列变，转手柄时只有左上 2×2 块变——g 的两块各管各的。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>求逆 · 2024 Q1(a) 原题</span><span class="val">g⁻¹ live</span></div>
+          <div class="eq">
+            <var>g</var><sup>−1</sup>
+            <span class="mat sym">
+              <span class="r"><span class="c c1"><i>R</i><sup>T</sup></span><span class="c">−<i>R</i><sup>T</sup><i>p</i></span></span>
+              <span class="r"><span class="c g">0</span><span class="c g">1</span></span>
+            </span>
+            <span class="op">＝</span>
+            <span class="mat" id="Ginv"></span>
+          </div>
+          <p class="note"><b>套路</b>：姿态块转置（<var>R</var><sup>T</sup>），位置块换成 <var>−R</var><sup>T</sup><var>p</var>。
+          考场按此三秒写出答案。下方面板验证：<var>g</var><sup>−1</sup><var>g</var> = <var>I</var> 恒成立。</p>
+          <div class="pipeline" id="pipe2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02.3 小测 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.3</span><span class="t">小测<em>CHECK</em></span></div>
+    <p class="lede">三道题，做完即时反馈。答错不算失败——错题会告诉我们明天从哪里开始。</p>
+
+    <div class="quiz">
+      <div class="q" data-q="1">
+        <div class="qhead"><span class="qn">Q1</span><span class="qt">拖动手柄使 <code>θ = 90°</code>。此时旋转矩阵 <var>R</var> 是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            <span class="m">[ <span class="c">1</span> <span class="c">0</span> / <span class="c">0</span> <span class="c">1</span> ]</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            <span class="m">[ <span class="c">0</span> <span class="c">−1</span> / <span class="c">1</span> <span class="c">0</span> ]</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            <span class="m">[ <span class="c">0</span> <span class="c">1</span> / <span class="c">−1</span> <span class="c">0</span> ]</span></label>
+        </div>
+        <div class="explain" data-for="1"></div>
+      </div>
+
+      <div class="q" data-q="2">
+        <div class="qhead"><span class="qn">Q2</span><span class="qt">点 q 在 B 系下坐标为 (1, 0)。当 <code>θ = 180°</code> 且 <var>p</var><sub>AB</sub> = (2, 0) 时，q 在 A 系下的坐标是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>
+            <span class="m">( 3, 0 )</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>
+            <span class="m">( 1, 0 )</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>
+            <span class="m">( −1, 0 )</span></label>
+        </div>
+        <div class="explain" data-for="2"></div>
+      </div>
+
+      <div class="q" data-q="3">
+        <div class="qhead"><span class="qn">Q3</span><span class="qt">齐次变换 <var>g</var> 的逆 <var>g</var><sup>−1</sup> 是？（2024 Q1(a) 考点）</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            <span class="m">[ <span class="c">Rᵀ</span> <span class="c">−Rᵀp</span> / <span class="c">0</span> <span class="c">1</span> ]</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            <span class="m">[ <span class="c">Rᵀ</span> <span class="c">−p</span> / <span class="c">0</span> <span class="c">1</span> ]</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            <span class="m">[ <span class="c">R</span> <span class="c">−Rᵀp</span> / <span class="c">0</span> <span class="c">1</span> ]</span></label>
+        </div>
+        <div class="explain" data-for="3"></div>
+      </div>
+
+      <div class="score"><span class="big" id="scoreNum">0</span><span class="of">/ 3 · 答对即刻计入</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Patchouli · 大图书馆课件工坊 · v2 · 2026-11</span>
+    <button class="next" data-hermes-send="继续做下一节网页课件：02章的指数坐标与 Rodrigues 公式（K03/K04），沿用瑞士风格与交互结构">下一节：指数坐标与 Rodrigues →</button>
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ================= 通用几何 ================= */
+const U = 46;                    // 每单位像素
+const fmt = v => (v>=0? " ":"") + v.toFixed(2);
+const fmtP = v => v.toFixed(2);
+const deg = r => r*180/Math.PI;
+
+function matHTML(rows, cls){
+  return '<span class="mat' + (cls? ' '+cls:'') + '">' +
+    rows.map(r => '<span class="r">' +
+      r.map((c,i)=>`<span class="c c${i+1}">${c}</span>`).join('') +
+    '</span>').join('') + '</span>';
+}
+
+/* ================= 画布 1：纯旋转 ================= */
+const cv1 = document.getElementById('cv1'), ctx1 = cv1.getContext('2d');
+const S1 = { theta: Math.PI/3, p:[0,0], q:[1.0,0.6], anim:null };
+
+/* ================= 画布 2：旋转 + 平移 ================= */
+const cv2 = document.getElementById('cv2'), ctx2 = cv2.getContext('2d');
+const S2 = { theta: Math.PI/4, p:[2.2,1.2], q:[0.8,0.5], anim:null };
+
+function fitCanvas(cv){
+  const dpr = window.devicePixelRatio||1;
+  const w = cv.clientWidth || cv.width;
+  const h = Math.round(w*520/860);
+  cv.width = w*dpr; cv.height = h*dpr;
+  cv.style.height = h+'px';
+  return {w, h, dpr};
+}
+
+function drawScene(cv, ctx, S, opts){
+  const {w,h,dpr} = fitCanvas(cv);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const ox = opts.movableP ? w*0.40 : w*0.5, oy = h*0.55;
+  const X = x => ox + x*U, Y = y => oy - y*U;
+
+  /* 网格 */
+  ctx.strokeStyle = '#ececea'; ctx.lineWidth = 1;
+  const nx = Math.ceil(w/U), ny = Math.ceil(h/U);
+  const gx0 = ox % U, gy0 = oy % U;
+  ctx.beginPath();
+  for(let i=0;i*U+gx0<w;i++){ ctx.moveTo(i*U+gx0,0); ctx.lineTo(i*U+gx0,h); }
+  for(let j=0;j*U+gy0<h;j++){ ctx.moveTo(0,j*U+gy0); ctx.lineTo(w,j*U+gy0); }
+  ctx.stroke();
+
+  /* 空间系 A 轴 */
+  ctx.strokeStyle = '#111'; ctx.lineWidth = 1.6;
+  arrow(ctx, 18, oy, w-14, oy); arrow(ctx, ox, h-14, ox, 12);
+  ctx.fillStyle = '#111'; ctx.font = '12px "Helvetica Neue",Arial';
+  ctx.fillText('xᴀ', w-30, oy-8); ctx.fillText('yᴀ', ox+8, 22);
+
+  const c = Math.cos(S.theta), s = Math.sin(S.theta);
+  const R = [[c,-s],[s,c]];
+  const px = S.p[0], py = S.p[1];
+  const Bx = [c,s], By=[-s,c];                    // B 的基向量在 A 中
+  const qx = px + R[0][0]*S.q[0] + R[0][1]*S.q[1]; // q 在 A 中
+  const qy = py + R[1][0]*S.q[0] + R[1][1]*S.q[1];
+
+  /* 零位形幽灵（当前位形是从它变来的） */
+  if(S.ghost){
+    ctx.save(); ctx.globalAlpha = .5;
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = '#e30613'; dashedArrow(ctx, X(0),Y(0), X(1.15),Y(0));
+    ctx.strokeStyle = '#999';    dashedArrow(ctx, X(0),Y(0), X(0),Y(1.15));
+    ctx.restore();
+  }
+
+  /* B 系 */
+  ctx.lineWidth = 2.6;
+  ctx.strokeStyle = '#E30613'; arrow(ctx, X(px),Y(py), X(px+Bx[0]*1.3), Y(py+Bx[1]*1.3));
+  ctx.strokeStyle = '#555';    arrow(ctx, X(px),Y(py), X(px+By[0]*1.3), Y(py+By[1]*1.3));
+  ctx.fillStyle = '#E30613'; ctx.fillText('xᴃ', X(px+Bx[0]*1.45)-4, Y(py+Bx[1]*1.45)+4);
+  ctx.fillStyle = '#555';    ctx.fillText('yᴃ', X(px+By[0]*1.45)-4, Y(py+By[1]*1.45)+4);
+
+  /* 刚体轮廓：一段以 B 为固结系的 L 形，增强“刚体”感 */
+  ctx.strokeStyle = '#111'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+  const pts = [[0,0],[1.0,0],[1.0,0.9],[0.55,0.9],[0.55,0.45],[0,0.45]];
+  ctx.beginPath();
+  pts.forEach((pt,i)=>{
+    const wx = px + R[0][0]*pt[0] + R[0][1]*pt[1];
+    const wy = py + R[1][0]*pt[0] + R[1][1]*pt[1];
+    i? ctx.lineTo(X(wx),Y(wy)) : ctx.moveTo(X(wx),Y(wy));
+  });
+  ctx.closePath(); ctx.stroke();
+
+  /* 点 q */
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.arc(X(qx),Y(qy),5.5,0,7); ctx.fill();
+  ctx.font = 'bold 13px "Helvetica Neue",Arial';
+  ctx.fillText('q', X(qx)+9, Y(qy)-8);
+
+  /* 手柄：旋转（b1 顶端外圈） */
+  const hx = px + Bx[0]*1.3, hy = py + Bx[1]*1.3;
+  drawHandle(ctx, X(hx),Y(hy), 9, '#E30613', S.drag==='rot');
+
+  /* 手柄：B 原点（可平移时） */
+  if(opts.movableP) drawHandle(ctx, X(px),Y(py), 9, '#111', S.drag==='p');
+
+  return {R, px, py, qx, qy, w, h, ox, oy};
+}
+
+function drawHandle(ctx,x,y,r,color,active){
+  ctx.beginPath(); ctx.arc(x,y,r+4,0,7);
+  ctx.fillStyle = active? color : '#fff';
+  ctx.fill();
+  ctx.lineWidth = active? 3:2;
+  ctx.strokeStyle = color; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x,y,r-3.5,0,7);
+  ctx.fillStyle = color; ctx.fill();
+}
+function arrow(ctx,x1,y1,x2,y2){
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const a = Math.atan2(y2-y1,x2-x1), L=9;
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-L*Math.cos(a-0.42), y2-L*Math.sin(a-0.42));
+  ctx.lineTo(x2-L*Math.cos(a+0.42), y2-L*Math.sin(a+0.42));
+  ctx.closePath(); ctx.fill();
+}
+function dashedArrow(ctx,x1,y1,x2,y2){
+  ctx.setLineDash([5,4]); arrow(ctx,x1,y1,x2,y2); ctx.setLineDash([]);
+}
+
+/* ================= 交互（pointer 事件） ================= */
+function bindDrag(cv, S, opts){
+  const toWorld = e => {
+    const r = cv.getBoundingClientRect();
+    const {w,h} = {w:cv.clientWidth, h:cv.clientHeight};
+    const ox = opts.movableP? w*0.40 : w*0.5, oy = h*0.55;
+    return [ (e.clientX-r.left-ox)/U, (oy-(e.clientY-r.top))/U ];
+  };
+  cv.addEventListener('pointerdown', e=>{
+    if(S.anim) return;
+    const [mx,my] = toWorld(e);
+    const c=Math.cos(S.theta), s=Math.sin(S.theta);
+    const hx = S.p[0]+c*1.3, hy = S.p[1]+s*1.3;
+    const dRot = Math.hypot(mx-hx,my-hy);
+    const dP   = opts.movableP? Math.hypot(mx-S.p[0],my-S.p[1]) : 99;
+    const qx = S.p[0]+c*S.q[0]-s*S.q[1], qy = S.p[1]+s*S.q[0]+c*S.q[1];
+    const dQ = Math.hypot(mx-qx,my-qy);
+    if(dRot<0.42 && dRot<=dP) S.drag='rot';
+    else if(opts.movableP && dP<0.42 && dP<dRot) S.drag='p';
+    else if(dQ<0.3) S.drag='q';
+    if(S.drag){ cv.setPointerCapture(e.pointerId); e.preventDefault(); }
+  });
+  cv.addEventListener('pointermove', e=>{
+    if(S.anim) return;
+    if(!S.drag) { hover(cv,S,toWorld(e),opts); return; }
+    const [mx,my] = toWorld(e);
+    if(S.drag==='rot'){
+      S.theta = Math.atan2(my-S.p[1], mx-S.p[0]);
+    }else if(S.drag==='p'){
+      S.p = [clamp(mx,-3.6,4.8), clamp(my,-2.6,2.6)];
+    }else if(S.drag==='q'){
+      const c=Math.cos(S.theta), s=Math.sin(S.theta);
+      const dx = mx-S.p[0], dy=my-S.p[1];
+      S.q = [ c*dx+s*dy, -s*dx+c*dy ].map(v=>clamp(v,-2.2,2.2));
+    }
+    render();
+  });
+  const up = e=>{ S.drag=null; };
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+}
+function hover(cv,S,m,opts){
+  const c=Math.cos(S.theta), s=Math.cos(S.theta+Math.PI/2);
+  const hx=S.p[0]+Math.cos(S.theta)*1.3, hy=S.p[1]+Math.sin(S.theta)*1.3;
+  const near = Math.hypot(m[0]-hx,m[1]-hy)<0.42 || (opts.movableP&&Math.hypot(m[0]-S.p[0],m[1]-S.p[1])<0.42);
+  cv.style.cursor = near? 'grab' : 'crosshair';
+}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ================= 面板渲染 ================= */
+function renderPanel1(st){
+  const {R} = st, c=R[0][0], s=R[1][0];
+  document.getElementById('thetaOut').textContent = 'θ = ' + deg(Math.atan2(s,c)).toFixed(1) + '°';
+  document.getElementById('Rmat').innerHTML = matHTML([[fmtP(c),fmtP(-s)],[fmtP(s),fmtP(c)]]);
+  document.getElementById('qOut').textContent = `qᴮ = ( ${fmtP(S1.q[0])}, ${fmtP(S1.q[1])} )`;
+
+  const qx = R[0][0]*S1.q[0] + R[0][1]*S1.q[1];
+  const qy = R[1][0]*S1.q[0] + R[1][1]*S1.q[1];
+  document.getElementById('pipe1').innerHTML =
+   `<div class="row">qᴬ = R·qᴮ = <span class="k">[ ${fmtP(R[0][0])} ${fmtP(R[0][1])} ]</span>·[ ${fmtP(S1.q[0])} ; ${fmtP(S1.q[1])} ]</div>`+
+   `<div class="row"><span class="cm">xᴬ =</span> ${fmtP(R[0][0])}×${fmtP(S1.q[0])} − ${fmtP(-R[0][1])}×${fmtP(S1.q[1])} <span class="cm">=</span> ${fmtP(R[0][0]*S1.q[0])} ${R[0][1]<0?'+':'−'} ${fmtP(Math.abs(R[0][1]*S1.q[1]))} <span class="cm">=</span> <span class="res">${fmtP(qx)}</span></div>`+
+   `<div class="row"><span class="cm">yᴬ =</span> ${fmtP(R[1][0])}×${fmtP(S1.q[0])} + ${fmtP(R[1][1])}×${fmtP(S1.q[1])} <span class="cm">=</span> ${fmtP(R[1][0]*S1.q[0])} + ${fmtP(R[1][1]*S1.q[1])} <span class="cm">=</span> <span class="res">${fmtP(qy)}</span></div>`+
+   `<div class="row"><span class="cm">校验 RᵀR 的对角元：</span> ${fmtP(c*c+s*s)} , ${fmtP(s*s+c*c)} <span class="cm">→ 恒为 1 ✓</span></div>`;
+}
+function renderPanel2(st){
+  const {R} = st;
+  document.getElementById('gOut').textContent =
+    `p = ( ${fmtP(S2.p[0])}, ${fmtP(S2.p[1])} )`;
+  document.getElementById('Gmat').innerHTML = matHTML([
+    [fmtP(R[0][0]),fmtP(R[0][1]),fmtP(S2.p[0])],
+    [fmtP(R[1][0]),fmtP(R[1][1]),fmtP(S2.p[1])],
+    ['0','0','1']]);
+  const iR = [[R[0][0],R[1][0]],[R[0][1],R[1][1]]];
+  const ipx = -(iR[0][0]*S2.p[0]+iR[0][1]*S2.p[1]);
+  const ipy = -(iR[1][0]*S2.p[0]+iR[1][1]*S2.p[1]);
+  document.getElementById('Ginv').innerHTML = matHTML([
+    [fmtP(iR[0][0]),fmtP(iR[0][1]),fmtP(ipx)],
+    [fmtP(iR[1][0]),fmtP(iR[1][1]),fmtP(ipy)],
+    ['0','0','1']]);
+  document.getElementById('pipe2').innerHTML =
+   `<div class="row"><span class="cm">逆的位置块：</span>−Rᵀp = −[ ${fmtP(iR[0][0])} ${fmtP(iR[0][1])} ; ${fmtP(iR[1][0])} ${fmtP(iR[1][1])} ]·[ ${fmtP(S2.p[0])} ; ${fmtP(S2.p[1])} ]</div>`+
+   `<div class="row"><span class="cm">　　　　　　</span>= −[ ${fmtP(iR[0][0]*S2.p[0]+iR[0][1]*S2.p[1])} ; ${fmtP(iR[1][0]*S2.p[0]+iR[1][1]*S2.p[1])} ] = <span class="res">( ${fmtP(ipx)}, ${fmtP(ipy)} )</span></div>`;
+}
+
+function render(){
+  const st1 = drawScene(cv1, ctx1, S1, {movableP:false});
+  renderPanel1(st1);
+  const st2 = drawScene(cv2, ctx2, S2, {movableP:true});
+  renderPanel2(st2);
+}
+
+/* ================= 演示动画 ================= */
+function animate(S, key, cb){
+  if(S.anim) cancelAnimationFrame(S.anim);
+  const from = {theta:S.theta, p:[...S.p]}, to = key;
+  const t0 = performance.now(), D = 1300;
+  const step = now=>{
+    let k = Math.min(1,(now-t0)/D);
+    k = k<0.5? 2*k*k : 1-Math.pow(-2*k+2,2)/2;   // easeInOut
+    S.theta = from.theta + (to.theta-from.theta)*k;
+    if(to.p) S.p = [from.p[0]+(to.p[0]-from.p[0])*k, from.p[1]+(to.p[1]-from.p[1])*k];
+    render();
+    if(k<1) S.anim = requestAnimationFrame(step);
+    else { S.anim=null; if(cb) cb(); }
+  };
+  S.anim = requestAnimationFrame(step);
+}
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function instant(S,to){ Object.assign(S,to); render(); }
+
+document.getElementById('anim1').onclick = () => {
+  S1.ghost = true;
+  if (reduceMotion) { instant(S1, {theta:Math.PI/3}); S1.ghost = false; }
+  else animate(S1, {theta:Math.PI/3}, () => S1.ghost = false);
+};
+document.getElementById('snap90').onclick  = ()=> animate(S1,{theta:Math.PI/2});
+document.getElementById('snap180').onclick = ()=> animate(S1,{theta:Math.PI});
+document.getElementById('reset1').onclick = ()=>{ S1.ghost=false; animate(S1,{theta:Math.PI/3}); };
+document.getElementById('anim2').onclick = () => {
+  S2.ghost = true;
+  if (reduceMotion) { instant(S2, {theta:Math.PI/4, p:[2.2,1.2]}); S2.ghost = false; }
+  else animate(S2, {theta:Math.PI/4, p:[2.2,1.2]}, () => S2.ghost = false);
+};
+document.getElementById('reset2').onclick = ()=>{ S2.ghost=false; animate(S2,{theta:Math.PI/4, p:[2.2,1.2]}); };
+
+bindDrag(cv1,S1,{movableP:false});
+bindDrag(cv2,S2,{movableP:true});
+window.addEventListener('resize', render);
+
+/* ================= 小测 ================= */
+const answers = { 1:1, 2:1, 3:0 };   // 正确选项索引（0 起）
+const why = {
+  1:'θ=90° 时 cosθ=0、sinθ=1，基向量 xᴮ 转到 yᴀ 方向 → 第 1 列 (0,1)。也可用 02.1 面板直接验证：转到 90° 看矩阵列。',
+  2:'qᴬ = R·qᴮ + p = (−1,0)·1 + (2,0) = (1,0)。旋转把 (1,0) 变到 (−1,0)，平移再加 (2,0)。',
+  3:'齐次求逆套路：姿态块转置 Rᵀ，位置块 −Rᵀp。B 相对 A 的姿态取逆 = 姿态转置；位置反向变换要先转到 A 的方向再取反。02.2 右侧面板实时验证。'
+};
+let got = {};
+document.querySelectorAll('.q').forEach(qEl=>{
+  const qn = qEl.dataset.q;
+  const opts = qEl.querySelectorAll('.opt');
+  opts.forEach((op,i)=>{
+    op.addEventListener('click', ()=>{
+      if(qEl.dataset.done) return;
+      qEl.dataset.done = '1';
+      opts.forEach(o=>o.classList.add('locked'));
+      op.classList.add('chosen');
+      if(i===answers[qn]){ op.classList.add('right'); got[qn]=1; }
+      else { op.classList.add('wrong'); opts[answers[qn]].classList.add('right'); got[qn]=0; }
+      const ex = qEl.querySelector('.explain');
+      ex.textContent = (i===answers[qn]? '✓ 正确 — ':'✗ 再看一遍 — ') + why[qn];
+      ex.classList.add('show');
+      document.getElementById('scoreNum').textContent = Object.values(got).filter(Boolean).length;
+    });
+  });
+});
+
+render();
+</script>
+</body>
+</html>

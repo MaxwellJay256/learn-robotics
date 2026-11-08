@@ -1,0 +1,33 @@
+<div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv2" width="860" height="520"></canvas>
+          <div class="cap"><span>g = ( R , p )</span><span class="hint">◎ 旋转手柄　◎ B 原点 = 平移　▪ 点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim2">从零位形演示</button>
+          <button id="reset2">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>齐次变换矩阵 · 结构 → 实时数值</span><span class="val" id="gOut">g live</span></div>
+          <div class="eq">
+            <span>\(g_{AB} =\)</span>
+            <span class="mathout" id="Gmat"></span>
+          </div>
+          <p class="note">底行的 \(0\ 0\ 1\) 就是让加法自动发生的机关。拖原点时只有第 3 列变，转手柄时只有左上 \(2\times2\) 块变——\(g\) 的两块各管各的。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>求逆 · 2024 Q1(a) 原题</span><span class="val">g⁻¹ live</span></div>
+          <div class="eq">
+            <span>\(g_{AB}^{-1} =\)</span>
+            <span class="mathout" id="Ginv"></span>
+          </div>
+          <p class="note"><b>套路</b>：姿态块转置 \(R^{\mathsf{T}}\)，位置块换成 \(-R^{\mathsf{T}}p\)。考场按此三秒写出答案。下方面板验证 \(g^{-1}g = I\) 恒成立。</p>
+          <div class="pipeline" id="pipe2"></div>
+        </div>
+      </div>
+    </div>

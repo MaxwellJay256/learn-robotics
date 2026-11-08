@@ -1,0 +1,199 @@
+import Section from '../components/Section.astro';
+import Prose from '../components/Prose.astro';
+import Box from '../components/Box.astro';
+import Raw from '../components/Raw.astro';
+import w08_1 from './fragments/08-1.html?raw';
+
+<Section n="08.0" t="引言" en="FROM JOINT RATES TO TIP VELOCITY">
+<Prose>
+
+### <span className="k">1</span> 关节转多快，末端走多快
+
+05 把“当前这一刻”的速度写成了 $V$。现在要问的是：这个 $V$ 与关节速率 $\dot\theta$ 是什么关系。答案是一个矩阵：
+
+```math
+V_s=J_s(\theta)\,\dot\theta
+```
+
+$J_s$ 是 $6\times n$ 的雅可比。**它是位形的函数，不是常数**——同一个机械臂，换个姿态，这个矩阵就换一套数。
+
+### <span className="k">2</span> 名字的来历
+
+多元微积分里，$y=f(x)$ 的雅可比是偏导矩阵 $\partial y_i/\partial x_j$。这里 $V$ 的六个分量各自对 $n$ 个关节角求偏导，拼起来就是 $J$。所以第 $i$ 列的含义很直接：**只有第 $i$ 个关节以单位速率转、其余不动时，末端的速度**。
+
+### <span className="k">3</span> 本节三件事
+
+<strong>列公式</strong>：不用对 $g$ 求导，每列就是一个被“搬过来”的关节旋量。**物体雅可比**：同一组数在工具系里的版本，两者差一个 $\mathrm{Ad}$。**奇异**：$J$ 降秩的位形——末端某个方向动不了，考试要你用几何语言描述出来。
+
+2024 Q3 的 (c)(d) 就是前两件与第三件。
+
+### <span className="k">4</span> 前置
+
+04 的旋量 $\xi=(v,\omega)$ 与指数、05 的 $\mathrm{Ad}_g$ 与 $V_s/V_b$。这一节没有新数学，只有“把已有的东西按列排好”。
+
+</Prose>
+
+<ul className="goals">
+  <li><span className="chk"></span><span>写出 $J_s$ 的列公式，并说清第 $i$ 列为什么只受前 $i-1$ 个关节影响</span></li>
+  <li><span className="chk"></span><span>用 $J_s=\mathrm{Ad}_{g_{st}}J_b$ 在两种雅可比之间换算</span></li>
+  <li><span className="chk"></span><span>给出 $J$ 降秩的条件，并把 6R 的三类奇异翻译成几何描述</span></li>
+  <li><span className="chk"></span><span>小测 08.4 三题至少对两题</span></li>
+</ul>
+</Section>
+
+<Section n="08.1" t="空间雅可比" en="SPATIAL JACOBIAN">
+<Prose>
+
+### <span className="k">1</span> 每列一个旋量
+
+第 $i$ 个关节的旋量 $\xi_i$ 是在**零位形**下量的（06 的做法）。当前位形下，它被前面 $i-1$ 个关节的变换搬到了新位置：
+
+```math
+J_s=\begin{bmatrix}\xi_1' & \xi_2' & \cdots & \xi_n'\end{bmatrix},\qquad
+\xi_i'=\mathrm{Ad}_{e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_{i-1}\theta_{i-1}}}\,\xi_i
+```
+
+$\mathrm{Ad}$ 就是 05 的换算器：把旋量从“零位形坐标”搬到“当前位形坐标”。
+
+### <span className="k">2</span> 为什么只受前 $i-1$ 个关节影响
+
+关节 $i$ 的轴挂在它前面的连杆上。后面的关节（$i+1$ 到 $n$）动，不会挪动这根轴；只有前面的关节会把整条臂（连同这根轴）搬走。所以第 $i$ 列里只出现 $\theta_1,\dots,\theta_{i-1}$，**第 1 列永远是零位形的 $\xi_1$**。
+
+这条性质是验算的好工具：算完 $J_s$，检查第 1 列是否还是原始旋量、第 2 列是否只含 $\theta_1$。
+
+### <span className="k">3</span> 平面 2R 的具体形式
+
+两连杆都在平面内，$\xi_1=(0,0,0;\,0,0,1)$、$\xi_2=(0,-l_1,0;\,0,0,1)$。第 2 列被 $e^{\hat\xi_1\theta_1}$ 一搬：
+
+```math
+\xi_2'=\begin{bmatrix}l_1\sin\theta_1\\ -l_1\cos\theta_1\\ 0\\ 0\\ 0\\ 1\end{bmatrix}
+```
+
+于是 $J_s=\begin{bmatrix}0 & l_1\sin\theta_1\\ 0 & -l_1\cos\theta_1\\ 0&0\\ 0&0\\ 0&0\\ 1&1\end{bmatrix}$。前两行是线速度、最后一行是角速度——**平面机构的 $J$ 只有三行非零**，这不是巧合，是自由度只有 3。
+
+<Box warn title="常见错误">
+
+- 用 $g_{st}$ 去乘 $\xi_i$。搬运要用“前 $i-1$ 个关节的指数积”，不是整条臂的 $g$。
+- 第 1 列也乘一遍。零位形没有前序关节，第 1 列就是 $\xi_1$ 本身。
+- 把 $\mathrm{Ad}$ 写成 $6\times6$ 全乘。平面情形只需转 $v$ 与 $\omega$，手算时按 $3\times3$ 块做就够。
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="08.2" t="物体雅可比" en="BODY JACOBIAN">
+<Prose>
+
+### <span className="k">1</span> 同一组数，换个参考系
+
+$J_b$ 的列是**在工具系里表达的**关节旋量。换算关系只有一条：
+
+```math
+J_s=\mathrm{Ad}_{g_{st}}\,J_b
+```
+
+因为 $V_s=\mathrm{Ad}_{g}V_b$ 对每一列都成立，把列排成矩阵就得到这条。反过来 $J_b=\mathrm{Ad}_{g^{-1}}J_s$。
+
+### <span className="k">2</span> 什么时候用哪个
+
+题目问“空间速度/空间雅可比”就用 $J_s$；问“物体速度/物体雅可比”就用 $J_b$。两者只差一次换算，**考试里先算一个，另一个用 $\mathrm{Ad}$ 换**，比重新推一遍快得多，也不容易错。
+
+2024 Q2 的 (b)(c) 就是这种关系：算完 $V_s$，$V_b$ 用 $\mathrm{Ad}_{g^{-1}}$ 一步得到。
+
+<Box title="离开本节前，合上文字回答">
+
+- $J_s$ 的第 1 列为什么不含任何 $\theta$？
+- 已知 $J_b$，怎么得到 $J_s$？
+- 平面 2R 的 $J_s$ 有几行非零，为什么？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="08.3" t="奇异与可操作性" en="SINGULARITIES">
+<Prose>
+
+### <span className="k">1</span> 奇异 = $J$ 降秩
+
+$V=J\dot\theta$。如果 $J$ 的列不满秩，就存在某个方向的速度**无论关节怎么转都产生不了**——这个位形叫奇异位形。数学上是 $\det J=0$（方阵）或秩 $<6$（一般情形）。
+
+### <span className="k">2</span> 平面 2R：一个 $\sin$ 就够
+
+末端位置 $p=(l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2),\ l_1\sin\theta_1+l_2\sin(\theta_1+\theta_2))$，对两个角求偏导拼成 $2\times2$：
+
+```math
+J_v=\begin{bmatrix}-l_1\sin\theta_1-l_2\sin(\theta_1+\theta_2) & -l_2\sin(\theta_1+\theta_2)\\
+l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2) & l_2\cos(\theta_1+\theta_2)\end{bmatrix},\qquad
+\det J_v=l_1l_2\sin\theta_2
+```
+
+$\theta_2=0$：两条连杆伸直；$\theta_2=\pi$：折回重合。两种都是“两列平行”，末端只能沿垂直于臂的方向动，径向动不了。
+
+### <span className="k">3</span> 6R 的三类几何情形
+
+考试要的是几何描述，不是代数条件。三类最常见：
+
+<strong>① 两关节共轴</strong>——两根轴重合，两个关节产生同一个运动，秩少 1。<strong>② 三根平行轴共面</strong>——三列线性相关，臂展成一条直线时就是这种。<strong>③ 四根轴汇交于一点</strong>——腕部的球腕在“手腕奇点”，两个转动退化成同一个。
+
+答法：先写 $\det J=0$ 或“某两列线性相关”，再翻译成上面三种之一，最后指出是哪几个关节。
+
+### <span class="k">4</span> 可操作性：离奇异有多远
+
+$\mu_2=\sigma_{\min}/\sigma_{\max}$（$J$ 的奇异值之比）。$\mu_2=1$ 最好，$\to0$ 说明接近奇异——此时关节速度稍大，末端速度就爆掉，实际控制里要避开。
+
+<Box warn title="常见错误">
+
+- 只说“$\det J=0$”不翻译成几何。题目要的是“哪几根轴怎么了”。
+- 把奇异当成“末端不能动”。是一个方向不能动，其余方向仍能动。
+- 用 $\mu_2$ 判断“能不能到”。它衡量的是速度传递的好坏，不是可达性。
+
+</Box>
+
+</Prose>
+
+<Raw html={w08_1} />
+</Section>
+
+<Section n="08.4" t="小测" en="CHECK">
+<Prose>
+
+<strong>规则。</strong>三题，覆盖列公式、换算、奇异。做完即时反馈，解析指回对应小节。
+
+</Prose>
+
+<div className="quiz">
+  <div className="q" data-q="1">
+    <div className="qhead"><span className="qn">Q1</span><span className="qt">$J_s$ 的第 $i$ 列是？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\mathrm{Ad}_{e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_{i-1}\theta_{i-1}}}\xi_i$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\mathrm{Ad}_{g_{st}}\xi_i$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\xi_i$ 本身</label>
+    </div>
+    <div className="explain" data-for="1"></div>
+  </div>
+
+  <div className="q" data-q="2">
+    <div className="qhead"><span className="qn">Q2</span><span className="qt">$J_s$ 与 $J_b$ 的关系是？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$J_s=\mathrm{Ad}_{g_{st}}J_b$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$J_s=J_b\mathrm{Ad}_{g_{st}}$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$J_s=J_b$</label>
+    </div>
+    <div className="explain" data-for="2"></div>
+  </div>
+
+  <div className="q" data-q="3">
+    <div className="qhead"><span className="qn">Q3</span><span className="qt">平面 2R 的奇异位形是？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\theta_2=0$ 或 $\pi$（两连杆共线）</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\theta_1=0$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\theta_2=\pi/2$</label>
+    </div>
+    <div className="explain" data-for="3"></div>
+  </div>
+
+  <div className="score"><span className="big" id="scoreNum">0</span><span className="of">/ 3 · 答对即刻计入</span></div>
+</div>
+</Section>

@@ -1,0 +1,29 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv1" width="860" height="470"></canvas>
+      <div class="cap"><span>雅可比的列 · 何时两列平行</span><span class="hint">Ctrl+拖 = 平移　拖末端 = 改 θ</span></div>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">θ₁</span>
+      <input class="range" id="t1" type="range" min="-170" max="170" step="1" value="35">
+      <b class="val" id="t1v">35°</b>
+      <span class="tlabel">θ₂</span>
+      <input class="range" id="t2" type="range" min="-170" max="170" step="1" value="60">
+      <b class="val" id="t2v">60°</b>
+      <button id="snapSing">θ₂ → 0°（奇异）</button>
+      <button id="snapPerp">θ₂ = 90°</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>线速度雅可比 J_v</span><span class="val" id="detOut">det</span></div>
+      <div class="eq"><span class="mathout" id="Jm"></span></div>
+      <p class="note">两列分别是“只转关节 1”“只转关节 2”时末端的单位速度方向。红 = 第 1 列，灰 = 第 2 列。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>可操作性</span><span class="val" id="muOut">μ₂</span></div>
+      <p class="note" id="stat">—</p>
+    </div>
+  </div>
+</div>

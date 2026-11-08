@@ -1,0 +1,364 @@
+import Section from '../components/Section.astro';
+import Prose from '../components/Prose.astro';
+import Box from '../components/Box.astro';
+import Raw from '../components/Raw.astro';
+import w05_1 from './fragments/05-1.html?raw';
+
+<Section n="05.0" t="引言" en="WHY TWO VELOCITIES">
+<Prose>
+
+### <span className="k">1</span> 先看一个会出错的场景
+
+假设物体系（工具系）相对空间系绕 $z$ 轴转了 $90^\circ$。你在物体系里读到末端速度 $v_b=(0.2,0,0)$ m/s，又查到空间系里障碍物的速度是 $(0.1,0,0)$ m/s。两个数一减，你判断“不会撞”。可末端真正的空间速度是 $(0,0.2,0)$ m/s——和障碍物的速度方向差 $90^\circ$。你拿两组不同坐标系里的数直接相减，结论不可靠。
+
+同一个运动，站在空间系里读是一组数，站在物体系里读是另一组。两组数描述同一个运动；物理量只有一个。本节要解决的，就是怎么在两组读数之间可靠地换算。考试的另一半分数也在这里：2024 Q2 的 (b)(c) 问的就是空间速度与物体速度。
+
+### <span className="k">2</span> 为什么不能直接对 $g$ 求导？
+
+$g$ 是 $4\times4$ 矩阵，求导得到 $4\times4$。位形只有 6 个自由度（3 个位置、3 个姿态），求导后也只有 6 个独立的速度分量（3 个线速度、3 个角速度）。直接拿 $\dot g$ 去算，等于用 16 个数描述 6 个自由度，乘起来也没有几何意义。
+
+正确做法是把 $\dot g$ 右乘或左乘 $g^{-1}$，冗余正好被消掉，剩下的 6 个数就是速度。这个“右乘还是左乘”，就是空间速度与物体速度的分界。
+
+### <span className="k">3</span> 本节要造的 3 件工具
+
+<Box title="3 件工具：先记职责，再记公式">
+
+- <strong>角速度</strong> $\omega_s,\omega_b$：从 $\dot R$ 里读出“转得多快、绕哪根轴”。空间系读法是 $\hat\omega_s=\dot RR^{\mathsf T}$，物体系读法是 $\hat\omega_b=R^{\mathsf T}\dot R$。
+- <strong>速度</strong> $V_s,V_b$：同一个六维速度的两份读数。把 $\dot g$ 右乘 $g^{-1}$，得空间速度 $V_s=\dot gg^{-1}$；把 $g^{-1}$ 左乘 $\dot g$，得物体速度 $V_b=g^{-1}\dot g$。
+- <strong>伴随矩阵</strong> $\mathrm{Ad}_g$：两份读数之间的汇率表，负责把 $V_b$ 翻译成 $V_s$。08 节的雅可比换算 $J_s=\mathrm{Ad}_{g}J_b$ 也靠它。
+
+</Box>
+
+3 件里，第三件最关键：后面凡是“换系”，答案都是 $\mathrm{Ad}_g$。
+
+### <span className="k">4</span> 前置：三句话就够
+
+你只需要记得三件事：
+
+1. 02 的 $g$ 怎么分块、$g^{-1}$ 的右上块为什么是 $-R^{\mathsf T}p$；
+2. 04 的旋量 $\xi=(v,\omega)$ 是平移在前；
+3. 03 的 $\dot p=\hat\omega p$ 与 $R=e^{\hat\omega\theta}$；05.1 会从这两条推出 $\dot R=\hat\omega R$。
+
+记不清就先回看对应小节——本节会反复用这三条。
+
+</Prose>
+
+<ul className="goals">
+  <li><span className="chk"></span><span>写出 $\hat\omega_s=\dot RR^{\mathsf T}$ 与 $\hat\omega_b=R^{\mathsf T}\dot R$，并说清右乘/左乘各在抵消什么，两者为什么差一个 $R$</span></li>
+  <li><span className="chk"></span><span>按定义算 $V_s=\dot gg^{-1}$、$V_b=g^{-1}\dot g$，写得出 $v_s=\dot p-\omega_s\times p$ 这一项是怎么掉出来的</span></li>
+  <li><span className="chk"></span><span>默写 $\mathrm{Ad}_g$ 的分块，并用 $V_s=\mathrm{Ad}_gV_b$ 把一组数换成另一组</span></li>
+  <li><span className="chk"></span><span>小测 05.4 三题至少对两题</span></li>
+</ul>
+</Section>
+
+<Section n="05.1" t="角速度" en="FROM R-DOT TO OMEGA">
+<Prose>
+
+### <span className="k">1</span> 先回看：从点的速度到 $\dot R=\hat\omega R$
+
+03 解决的是“一个点怎么转”：刚体绕轴转动时，体上任意一点 $p$ 的速度可以写成 $\dot p=\hat\omega p$。03 处理的是最简单的情形：转轴取单位向量 $\omega$，角速度取 1；现在把大小放回 $\omega$，它就是一个三自由度向量，方向给出转轴，长度给出角速率，而 $\dot p=\hat\omega p$ 的形状不变。
+
+```math
+\dot p=\hat\omega p
+```
+
+05 真正需要的是整个姿态 $R$ 的变化率，它和点的速度只差一步。$R$ 的三列 $r_1,r_2,r_3$ 是固连在刚体上的三根单位轴在空间系里的朝向；它们只随刚体转动，不随原点平移，所以每一列的变化率就是 $\dot r_i=\hat\omega r_i$。把三列按列拼起来，矩阵乘法正好把同一个 $\hat\omega$ 分配到每一列上：
+
+```math
+\dot R=[\dot r_1\ \dot r_2\ \dot r_3]
+=[\hat\omega r_1\ \hat\omega r_2\ \hat\omega r_3]
+=\hat\omega[r_1\ r_2\ r_3]=\hat\omega R.
+```
+
+这条式子逐时刻成立：$\omega$ 是当前角速度，轴可以随时间变，但每一瞬间都满足 $\dot R=\hat\omega R$。接下来两小节做的是同一件事的两面：右乘 $R^{\mathsf T}$ 把姿态的影响从 $\dot R$ 里消掉，读出空间系角速度；左乘 $R^{\mathsf T}$ 则把整个变化搬到物体系里读，得到同一个角速度在物体系中的坐标。
+
+### <span className="k">2</span> 空间角速度：右乘 $R^{\mathsf T}$
+
+先问一个看似多余的问题：$\dot R$ 里到底混着什么？它当然记录了刚体在转，但同时也带着当前姿态 $R$ 的影响——同样的角速度，姿态不同，$\dot R$ 的九个元素就不同。要把“转得多快”从“当前姿态”里剥离出来，做法是右乘 $R^{\mathsf T}$：因为 $R R^{\mathsf T}=I$，右乘 $R^{\mathsf T}$ 相当于给 $\dot R$ 换一套输入坐标，正好把姿态那一层抵消掉，剩下的才是纯转动。
+
+```math
+\dot R R^{\mathsf T}=\hat\omega R R^{\mathsf T}=\hat\omega.
+```
+
+于是空间系的角速度就定义为 $\hat\omega_s=\dot R R^{\mathsf T}$。这个操作的读法是：对任意空间向量 $x$，先算 $R^{\mathsf T}x$ 把它转进物体系，再让 $\dot R$ 作用，这样读出的变化率就不再带着当前姿态。因为这个矩阵作用在空间向量上，读出的是空间系里的速度场，所以这个读数叫空间角速度。这个矩阵自动是反对称的：对 $R R^{\mathsf T}=I$ 两边求导，得到 $\dot R R^{\mathsf T}+R\dot R^{\mathsf T}=0$；而 $R\dot R^{\mathsf T}$ 正是 $(\dot R R^{\mathsf T})^{\mathsf T}$，所以 $\dot R R^{\mathsf T}$ 等于自己转置的相反数。于是对角为零，九个元素里只有三个独立数；03 的 hat 算子已经说明，反对称矩阵与三维向量一一对应，所以“角速度只有三个数”是正交性的直接结果。
+
+```math
+\hat\omega_s=\dot R R^{\mathsf T}.
+```
+
+这里的 $\hat\omega_s$ 就是 §1 里的 $\hat\omega$：§1 从点的速度引入它，这里给出一个只依赖 $\dot R$ 和 $R$ 的算法，两者描述的是同一个空间角速度。
+
+### <span className="k">3</span> 物体系角速度：左乘 $R^{\mathsf T}$
+
+如果右乘 $R^{\mathsf T}$ 是从空间系读，那么左乘 $R^{\mathsf T}$ 就是从物体系读：按同样的定义，物体系角速度是 $\hat\omega_b=R^{\mathsf T}\dot R$。把 $\dot R=\hat\omega_s R$ 代进去，得到 $\hat\omega_b=R^{\mathsf T}\hat\omega_s R$。这个式子说明：物体系角速度可以由空间系角速度直接得到，把 $\hat\omega_s$ 夹在 $R^{\mathsf T}$ 和 $R$ 中间，就整体换到了物体系坐标。
+
+```math
+\hat\omega_b=R^{\mathsf T}\dot R=R^{\mathsf T}\hat\omega_s R.
+```
+
+要把这个矩阵等式翻译成向量等式，需要一条叉乘性质：旋转只改变方向，不改变长度和夹角，所以它保持叉乘，$R^{\mathsf T}(a\times b)=(R^{\mathsf T}a)\times(R^{\mathsf T}b)$。把 $R^{\mathsf T}\hat\omega_s R$ 作用在任意向量 $x$ 上，逐层代入这条性质：
+
+```math
+R^{\mathsf T}\hat\omega_s R\,x
+=R^{\mathsf T}\bigl(\omega_s\times(Rx)\bigr)
+=(R^{\mathsf T}\omega_s)\times x
+=\widehat{(R^{\mathsf T}\omega_s)}\,x.
+```
+
+因为上式对任意 $x$ 都成立，两边的矩阵必须相等，于是 $R^{\mathsf T}\hat\omega_s R=\widehat{(R^{\mathsf T}\omega_s)}$；再对比 $\hat\omega_b$ 的定义，就得到 $\omega_b=R^{\mathsf T}\omega_s$。这句话的几何含义很直接：空间系和物体系看到的是同一根瞬时转轴，只是同一根轴在两个坐标系里的坐标不同，而 $R^{\mathsf T}$ 正好是把空间系坐标换成物体系坐标的那个旋转。
+
+```math
+\omega_b=R^{\mathsf T}\omega_s.
+```
+
+也正因为它们描述同一根轴，下一节的两条验算才有依据：长度必须相等，方向只差一个 $R$。
+
+暂停一下。右乘 $R^{\mathsf T}$ 和左乘 $R^{\mathsf T}$，各自把变化率放到哪个系里读？如果 $R=I$，两者还有区别吗？先写下答案，再往下看。
+
+### <span className="k">4</span> 30 秒验算：长度相等，方向差一个 $R$
+
+由 $\omega_b=R^{\mathsf T}\omega_s$ 立刻得到两条验算。第一，$R$ 是正交阵，只改变方向、不改变长度，所以 $|\omega_b|=|\omega_s|$；第二，两个向量之间只差一个旋转 $R$，如果把 $\omega_b$ 用 $R$ 转回空间系，必须回到 $\omega_s$。手算完检查这两条，符号写反或转置方向弄反，都能立刻发现。
+
+走一组具体的数。假设某一刻 $R=R_x(90^\circ)$，空间系角速度 $\omega_s=(0,0,1)$，也就是绕空间 $z$ 轴转。要把它读成物体系坐标，左乘 $R^{\mathsf T}$：
+
+```math
+\omega_b=R^{\mathsf T}\omega_s=(0,1,0).
+```
+
+结果是物体系的 $y$ 轴。空间 $z$ 轴本身没有变；变的是读取它的坐标系。如果物体系相对空间系绕 $x$ 轴转了 $90^\circ$，那么在物体系里看，那根空间 $z$ 轴正好指向自己的 $y$ 轴。两个坐标的长度都是 1，方向之间差的就是这个 $90^\circ$ 的旋转；把 $\omega_b$ 再用 $R$ 转回去，就回到 $(0,0,1)$。
+
+<Box warn title="常见错误">
+
+- 把 $\dot RR^{\mathsf T}$ 与 $R^{\mathsf T}\dot R$ 记混。记法：<strong>右乘自己的转置</strong>（$\dot RR^{\mathsf T}$）读空间，<strong>左乘自己的转置</strong>（$R^{\mathsf T}\dot R$）读物体。
+- 以为两者相等。只有 $R$ 与 $\hat\omega$ 可交换时才相等，一般不等。
+- 把 $\omega$ 当单位向量。本节起 $\omega$ 带大小，单位轴才归一化。
+- 用 $\dot R$ 的元素直接当速度分量。必须做一次 $\dot RR^{\mathsf T}$ 才是角速度。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- 绕 $z$ 轴以 $\dot\theta$ 转，$R=R_z(\theta)$，求 $\hat\omega_s$ 与 $\hat\omega_b$。
+- 为什么 $\dot RR^{\mathsf T}$ 一定反对称？
+- $\omega_s$ 与 $\omega_b$ 的长度关系是什么？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="05.2" t="空间速度与物体速度" en="SPATIAL &amp; BODY VELOCITY">
+<Prose>
+
+### <span className="k">1</span> 两个定义，一字之差
+
+先把位姿写成 $g(t)=\begin{bmatrix}R&p\\0&1\end{bmatrix}$。求导时每个块分别求导，得到 $\dot g=\begin{bmatrix}\dot R&\dot p\\0&0\end{bmatrix}$。速度的两种定义只差一个乘法顺序：右乘 $g^{-1}$ 得到 $V_s^\wedge=\dot gg^{-1}$，左乘 $g^{-1}$ 得到 $V_b^\wedge=g^{-1}\dot g$。这两个结果都还是 $4\times4$ 矩阵，但底行全零，真正有内容的只有左上 $3\times3$ 和右上 $3\times1$ 两块；把这两块读出来，就是六维速度 $(v,\omega)$。
+
+要看清右乘为什么得到 $\dot p-\omega_s\times p$，先把 $g^{-1}$ 摆出来。02 已经推过块求逆：
+
+```math
+g^{-1}=\begin{bmatrix}R^{\mathsf T}&-R^{\mathsf T}p\\0&1\end{bmatrix}.
+```
+
+于是
+
+```math
+\dot gg^{-1}
+=\begin{bmatrix}\dot R&\dot p\\0&0\end{bmatrix}
+\begin{bmatrix}R^{\mathsf T}&-R^{\mathsf T}p\\0&1\end{bmatrix}
+=\begin{bmatrix}\dot RR^{\mathsf T}&\dot p-\dot RR^{\mathsf T}p\\0&0\end{bmatrix}.
+```
+
+左上正是 05.1 定义的 $\hat\omega_s=\dot RR^{\mathsf T}$；右上把 $\dot RR^{\mathsf T}$ 换成 $\hat\omega_s$，就是 $\dot p-\hat\omega_s p=\dot p-\omega_s\times p$。右乘 $g^{-1}$ 的物理动作，是先把“物体系原点不在空间原点上”带来的那一项从 $\dot p$ 里扣掉，再读变化率，所以得到的是空间系里的速度 $V_s=(v_s,\omega_s)$。
+
+左乘的顺序相反，乘法也把两个块重新组合：
+
+```math
+g^{-1}\dot g
+=\begin{bmatrix}R^{\mathsf T}&-R^{\mathsf T}p\\0&1\end{bmatrix}
+\begin{bmatrix}\dot R&\dot p\\0&0\end{bmatrix}
+=\begin{bmatrix}R^{\mathsf T}\dot R&R^{\mathsf T}\dot p\\0&0\end{bmatrix}.
+```
+
+左上正是 05.1 的 $\hat\omega_b=R^{\mathsf T}\dot R$；右上是 $R^{\mathsf T}\dot p$，也就是把物体系原点的空间速度整体转进物体系。于是 $V_b=(v_b,\omega_b)$ 是同一个运动的物体系读数。两个定义只差一个乘法顺序，但读出来的线速度完全不同：一个扣掉了原点被带着走的那一项，另一个则把 $\dot p$ 整体转进物体系。
+
+暂停一下。右乘 $g^{-1}$ 和左乘 $g^{-1}$，哪一个会先扣掉原点被带着走的那一项？先回答，再看下一小节。
+
+### <span className="k">2</span> $v_s$ 为什么不是 $\dot p$
+
+$\dot p$ 是物体系原点在空间系里的速度，看着最像“速度”，但它不是 $v_s$。原因是刚体在转，只要物体系原点不在空间系原点上，它的速度里就混着“被转动带着走”的那一部分；$v_s=\dot p-\omega_s\times p$ 做的就是把这一部分扣掉。
+
+几何上，$v_s$ 是瞬时与空间系原点重合的那一点的速度：想象刚体被瞬间延展到原点，那一小块的速度就是 $v_s$。它不是任何一个真实材料点的速度，所以直觉上别扭，但它是空间系里最自然的量，因为它不随 $p$ 变。
+
+用一组具体的数就能看出差别。取 $R=I$、$p=(1,0,0)$、$\omega_s=(0,0,1)$，刚体绕空间 $z$ 轴转，物体系原点在 $x$ 轴上。物体系原点的速度是
+
+```math
+\dot p=\omega_s\times p=(0,1,0),
+```
+
+但
+
+```math
+v_s=\dot p-\omega_s\times p=(0,1,0)-(0,1,0)=0.
+```
+
+末端明明在动，$v_s$ 却是零；这不是算错，因为此刻与空间原点重合的那一点正好在转轴上，它当然不动。这个例子也说明，$v_s$ 和 $\dot p$ 是两个不同的量，不能互相替代。
+
+### <span className="k">3</span> $v_b$ 是“在物体系里读的 $\dot p$”
+
+$v_b=R^{\mathsf T}\dot p$ 的读法很直接：先取物体系原点在空间系里的速度 $\dot p$，再用 $R^{\mathsf T}$ 把它转进物体系。它和 $v_s$ 是同一个运动的两份线速度读数，区别在于 $v_s$ 扣掉了原点被带着走的那一项，而 $v_b$ 保留的是物体系原点自己的速度，只是换了一套坐标。角速度那一半也遵循同样的规则：$\omega_b=R^{\mathsf T}\omega_s$。所以 $V_b=(v_b,\omega_b)$ 是“当前这一刻的瞬时旋量，在物体系里表达”。
+
+它和 04 的旋量是同一个六维向量的两种用法。04 用 $\xi=(v,\omega)$ 描述一整段螺旋运动，05 用 $V_b$ 描述某一瞬间的速度；两者都是六个数，排列顺序也一致，所以在 $V_b$ 不随时间变的那段运动里，沿时间积分它，得到的就是 $e^{\hat\xi\theta}$。这也是为什么 05 要沿用 04 的 $(v,\omega)$ 顺序：顺序一换，后面每一个矩阵都要重排。
+
+读图之前先猜一件事：把 $d\theta_2/dt$ 调到 0，只转第一关节，红箭头和灰箭头会重合吗？下面这张图把 $V_s$ 和 $V_b$ 同时画了出来，红箭头是 $V_s$，灰箭头是 $V_b$ 转回空间方向后的样子；拖动滑块改变位形和角速度，先验证你的猜测，再看右侧“换算校验”里 $\mathrm{Ad}_gV_b$ 是否等于 $V_s$。
+
+</Prose>
+
+<Raw html={w05_1} />
+
+<Prose>
+
+### <span className="k">4</span> 考试怎么写
+
+考场上不要凭记忆写 $v_s=\dot p$，按定义走三步，每一步都能在卷面上留下可检查的痕迹：
+
+1. 写出 $g$，把 $R$ 和 $p$ 分开写清楚。
+2. 求 $\dot g$，其中 $\dot R=\hat\omega R$，$\dot p$ 逐项求导。
+3. 按题目要求乘 $g^{-1}$：右乘得到 $V_s$，左乘得到 $V_b$，取右上块作为线速度。
+
+算完以后用 $v_s=\dot p-\omega_s\times p$ 或 $v_b=R^{\mathsf T}\dot p$ 验算一遍，符号错、转置方向错都会在这一步暴露。2024 Q2 的 (b)(c) 差的就是第三步里的这一项，所以第二步求完 $\dot g$ 之后，先别急着写答案，先把 $g^{-1}$ 摆出来，再逐块乘。
+
+<Box warn title="常见错误">
+
+- $v_s$ 直接写成 $\dot p$，漏掉 $-\omega_s\times p$。这一项不是小修正，它可能让整个线速度的方向反过来。
+- 用同一个 $\omega$ 去配 $V_s$ 与 $V_b$。角速度也要换系：$\omega_b=R^{\mathsf T}\omega_s$。
+- 顺序写成 $(\omega,v)$。与 04 一致，一律写 $(v,\omega)$；顺序一换，$\mathrm{Ad}_g$ 的分块也要重排。
+- 把 $V_s$ 当成“空间系原点的速度”。空间原点不动，$v_s$ 是瞬时与它重合的那一点的速度。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- 取 $R=I$、$p=(1,0,0)$、$\omega_s=(0,0,1)$、$\dot p=(0,1,0)$，写出 $V_s$ 与 $V_b$。
+- 为什么 $v_s\neq\dot p$？用“瞬时重合点”解释。
+- 已知 $V_b$，怎么用 $\mathrm{Ad}_g$ 得到 $V_s$？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="05.3" t="伴随矩阵" en="THE ADJOINT">
+<Prose>
+
+### <span className="k">1</span> 伴随矩阵：把一份读数翻译成另一份
+
+$V_s$ 和 $V_b$ 是同一个运动的两种读数，把它们联系起来的是一张 $6\times6$ 的“汇率表”，叫伴随矩阵 $\mathrm{Ad}_g$：输入物体系的六维速度，输出空间系的同一个速度，记作 $V_s=\mathrm{Ad}_gV_b$。它不产生新的物理量，只负责换坐标；之所以是 $6\times6$，是因为速度有六个分量（三个线速度、三个角速度），进去六个，出来还是六个。
+
+把两边的分块摆开，先看角速度那一行。这一行只涉及角速度，05.1 已经给出 $\omega_s=R\omega_b$，所以右下块是 $R$。再看线速度那一行：$v_s=Rv_b+p\times\omega_s$，而 $\omega_s=R\omega_b$，所以 $p\times\omega_s=p\times(R\omega_b)=\hat pR\omega_b$；于是右上块是 $\hat pR$，左上块是 $R$，左下块是零。把这四块拼起来：
+
+```math
+\begin{bmatrix}v_s\\\omega_s\end{bmatrix}
+=\begin{bmatrix}R&\hat pR\\0&R\end{bmatrix}
+\begin{bmatrix}v_b\\\omega_b\end{bmatrix}.
+```
+
+第一项 $Rv_b$ 把物体系的线速度转进空间系；第二项 $p\times\omega_s$ 补的是“物体系原点不在空间系原点上”的欠账——同一个速度，换一个读取点，线速度会多出 $p\times\omega_s$ 这一项。04 里的 $v=h\omega-\omega\times r$ 补的是“转轴不过原点”的欠账，两者都是平移补偿，只是补偿的对象不同。
+
+暂停一下。如果 $R=I$，$\mathrm{Ad}_g$ 的右上块会变成什么？先写下答案，再对照下一节的数值例子。
+
+### <span className="k">2</span> 同一组数走一遍
+
+用 05.2 的那组数验一遍：$R=I$、$p=(1,0,0)$、$\omega_s=(0,0,1)$、$\dot p=(0,1,0)$。此时 $v_b=R^{\mathsf T}\dot p=(0,1,0)$，$v_s=\dot p-\omega_s\times p=0$，所以
+
+```math
+V_b=\begin{bmatrix}0\\1\\0\\0\\0\\1\end{bmatrix},
+\qquad
+V_s=\begin{bmatrix}0\\0\\0\\0\\0\\1\end{bmatrix}.
+```
+
+这里 $R=I$，右上块 $\hat pR$ 退化成 $\hat p$，所以下面看到的第二项就是纯粹的 $p\times\omega_s$。用 $\mathrm{Ad}_g$ 把 $V_b$ 翻译成空间系：
+
+```math
+\mathrm{Ad}_gV_b
+=\begin{bmatrix}Rv_b\\R\omega_b\end{bmatrix}
++\begin{bmatrix}\hat pR\omega_b\\0\end{bmatrix}
+=\begin{bmatrix}(0,1,0)\\(0,0,1)\end{bmatrix}
++\begin{bmatrix}(0,-1,0)\\(0,0,0)\end{bmatrix}
+=\begin{bmatrix}(0,0,0)\\(0,0,1)\end{bmatrix}=V_s.
+```
+
+第一项 $Rv_b=(0,1,0)$ 是物体系原点的线速度，第二项 $p\times\omega_s=(0,-1,0)$ 正好把它抵消掉。这个抵消不是巧合：$v_s$ 问的是空间原点那一点的速度，而物体系原点的速度里有整整一项来自“原点不在空间原点上”。把这一项补回去，两个读数就回到同一个运动。
+
+### <span className="k">3</span> 三条性质：换回、串联、验算
+
+$\mathrm{Ad}_g$ 有三条性质，每一条都对应一个使用场景：
+
+- <strong>换回去</strong>：$\mathrm{Ad}_{g^{-1}}=(\mathrm{Ad}_g)^{-1}$。已知 $V_s$ 求 $V_b$ 时，直接用逆，不用重新推导。
+- <strong>串联</strong>：$\mathrm{Ad}_{g_1g_2}=\mathrm{Ad}_{g_1}\mathrm{Ad}_{g_2}$。多段变换可以逐段乘，最后得到的仍然是同一个 $6\times6$ 矩阵。
+- <strong>验算</strong>：$\omega^{\mathsf T}v$ 在换算下不变。算完 $V_s$ 和 $V_b$ 之后，两者的点积应该相等；如果不相等，说明分块或乘法顺序写错了。
+
+### <span className="k">4</span> 它是后面两节的枢纽
+
+$\mathrm{Ad}_g$ 不是本节最后一个公式，后面还会反复用到它。08 节的空间雅可比列公式里，每一列都是一次 $\mathrm{Ad}$ 搬运；雅可比之间的换算 $J_s=\mathrm{Ad}_{g_{st}}J_b$ 也是同一个矩阵。考试里凡是“把速度或雅可比从一个系换到另一个系”，答案基本都是 $\mathrm{Ad}$。所以这一节真正要带走的，除了 $\begin{bmatrix}R&\hat pR\\0&R\end{bmatrix}$ 这个分块，还有“看到换系就找 $\mathrm{Ad}$”这个反应。
+
+<Box warn title="常见错误">
+
+- 写成 $\begin{bmatrix}R&\hat p\\0&R\end{bmatrix}$。右上块是 $\hat pR$，先转再叉乘；漏掉 $R$ 等于在错误的坐标系里做叉乘。
+- 写成 $R\hat p$。叉乘在空间系里做，$R$ 必须在右边；写成 $R\hat p$ 等于先在物体系里叉乘，再转回空间系，顺序反了。
+- 逆的伴随用转置代替。$\mathrm{Ad}_g$ 不是正交阵，逆要按块求，不能直接转置。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- 写出 $\mathrm{Ad}_g$ 的分块，并说出右上块为什么是 $\hat pR$。
+- 已知 $V_b$，怎么求 $V_s$？已知 $V_s$，怎么求 $V_b$？
+- 用 $\omega^{\mathsf T}v$ 验算时，两边应该相等吗？为什么？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="05.4" t="小测" en="CHECK">
+<Prose>
+
+<strong>规则。</strong>三题分别检查三个最容易断的环节：空间角速度的乘法方向、$v_s$ 里被扣掉的那一项、$\mathrm{Ad}_g$ 的右上块。每题做完立刻给反馈，解析里会指出该回看的小节；错一题就回去把那一段重读一遍，再回来做，不要只看答案。
+
+</Prose>
+
+<div className="quiz">
+  <div className="q" data-q="1">
+    <div className="qhead"><span className="qn">Q1</span><span className="qt">空间角速度 $\omega_s$ 由哪个式子给出？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$R^{\mathsf T}\dot R$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\dot RR^{\mathsf T}$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\dot R$</label>
+    </div>
+    <div className="explain" data-for="1"></div>
+  </div>
+
+  <div className="q" data-q="2">
+    <div className="qhead"><span className="qn">Q2</span><span className="qt">取 $R=I$、$p=(1,0,0)$、$\omega_s=(0,0,1)$、$\dot p=(0,1,0)$，则 $v_s$ 等于？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$(0,1,0)$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$(1,0,0)$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$(0,0,0)$</label>
+    </div>
+    <div className="explain" data-for="2"></div>
+  </div>
+
+  <div className="q" data-q="3">
+    <div className="qhead"><span className="qn">Q3</span><span className="qt">$\mathrm{Ad}_g$ 的右上块是？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\hat pR$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$\hat p$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>$R\hat p$</label>
+    </div>
+    <div className="explain" data-for="3"></div>
+  </div>
+
+  <div className="score"><span className="big" id="scoreNum">0</span><span className="of">/ 3 · 答对即刻计入</span></div>
+</div>
+</Section>

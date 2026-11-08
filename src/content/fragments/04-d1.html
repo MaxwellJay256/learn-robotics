@@ -1,0 +1,26 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv4a" width="860" height="430"></canvas>
+      <div class="cap"><span>螺旋线 · 圆被拉成螺旋</span><span class="hint">Ctrl+拖 = 平移　右键拖 = 转视角</span></div>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">螺距 h</span>
+      <input class="range" id="hA" type="range" min="0" max="0.6" step="0.01" value="0.35">
+      <b class="val" id="hAv">0.35</b>
+      <span class="tlabel">扫过的角 θ</span>
+      <input class="range" id="tA" type="range" min="0" max="6.283" step="0.01" value="3.1416">
+      <b class="val" id="tAv">180°</b>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>圆与螺旋的关系</span><span class="val">h 控制高度</span></div>
+      <p class="note">灰虚线是 <b>h = 0</b> 的整圆：点到轴的距离不变，只在垂直平面里绕。红线的每个点都比圆上的对应点高出 <b>hθ</b>，于是圆被拉成螺旋；每转一圈沿轴升高 2πh。把 h 拖到 0，红线与灰线重合。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>读法</span><span class="val">d = hθ</span></div>
+      <p class="note">粗黑线是从当前点到轴的垂足，长度恒定——这正是“转动”不改变半径的意思；改变的只有沿轴的那一截。</p>
+    </div>
+  </div>
+</div>

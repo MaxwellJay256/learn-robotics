@@ -1,0 +1,31 @@
+<div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv3" width="860" height="520"></canvas>
+          <div class="cap"><span>拖动黑点 p 定方向；拖三轴顶端圆环原地改朝向</span><span class="hint">◎ 点 = 位置　◎ 圆环 = 绕 p̂ 自转</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="snap903">θ = 90°</button>
+          <button id="snap1803">θ = 180°</button>
+          <button id="tw903">自转 90°</button>
+          <button id="reset3">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>拖动产生的转动 · R 数值</span><span class="val" id="thetaOut3">θ = 0°</span></div>
+          <div class="eq">
+            <span>\(R =\)</span>
+            <span class="mathout" id="Rmat3"></span>
+          </div>
+          <p class="note">\(R\) 由 \((\hat\omega,\theta)\) 用本节的三项式即时造出——和上面那块面板同一条正向路。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>反向求解 · 轴与角自动解出</span><span class="val" id="pOut3">cosθ = 1.00</span></div>
+          <div class="pipeline" id="pipe3"></div>
+          <p class="note" id="trap3">两条路给出的数实时对照。把点拖到 p₀ 的正对面，看轴不唯一的边界。</p>
+        </div>
+      </div>
+    </div>

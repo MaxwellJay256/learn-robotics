@@ -1,0 +1,40 @@
+<div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv2" width="860" height="520"></canvas>
+          <div class="cap"><span>R = e 的 ω̂θ 次幂（轴测投影）</span><span class="hint">↔ 左右拖动 = 扫 θ　● 按钮选转轴</span></div>
+        </div>
+        <div class="toolbar">
+          <span class="tlabel">转轴 ω</span>
+          <button class="on" id="axX">x</button>
+          <button id="axY">y</button>
+          <button id="axZ">z</button>
+          <button id="axR">随机斜轴</button>
+          <button id="snap1202">θ=120°</button>
+          <button class="primary" id="snap1802">θ=180°</button>
+          <button id="reset2">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>正向 · Rodrigues 数值</span><span class="val" id="thetaOut2">θ = 0°</span></div>
+          <div class="eq">
+            <span>\(R = \begin{bmatrix} x_B & y_B & z_B \end{bmatrix} =\)</span>
+            <span class="mathout" id="Rmat2"></span>
+          </div>
+          <p class="note">三列就是三个基向量转完后的坐标（02 课的结论在三维依然成立）。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>正向拆解 · I + ω̂ sinθ + ω̂²(1−cosθ)</span></div>
+          <div class="pipeline" id="pipe2a"></div>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>逆向 · tr → θ → ω</span><span class="val" id="trOut">tr = 3</span></div>
+          <div class="pipeline" id="pipe2b"></div>
+          <p class="note" id="trapNote">两条路线都可用。把 θ 拖到 180° 附近看通用式熄灭。</p>
+        </div>
+      </div>
+    </div>

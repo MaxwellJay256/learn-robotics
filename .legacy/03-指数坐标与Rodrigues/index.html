@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器人学导论 · 03 指数坐标与 Rodrigues — 交互式学习平台</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="kicker"><span class="sq"></span>机器人学导论 · 交互式学习平台 · 第二课</div>
+    <h1>03 指数坐标与 Rodrigues<span class="en">Exponential Coordinates — 矩阵指数 · 轴 + 角</span></h1>
+    <div class="meta">
+      <span><b>知识清单</b>　K03–K04</span>
+      <span><b>考试对应</b>　2024 Q1(b)</span>
+      <span><b>体系</b>　李泽湘 / MLS §2.2</span>
+    </div>
+  </header>
+
+  <!-- ============ 03.0 引言 ============ -->
+  <section>
+    <div class="secno"><span class="n">03.0</span><span class="t">引言<em>WHY AXIS + ANGLE</em></span></div>
+    <div class="prose">
+      <p><b>上一课留下冗余。</b>旋转矩阵用 9 个数描述只有 3 个自由度的旋转——看不出绕哪根轴、转了多少角，还附赠 6 个约束方程。<b>"绕单位轴 ω 转 θ"才是旋转的自然语言</b>，本课把这句话变成可计算的公式。</p>
+      <p><b>本课做两件事。</b>正向：给定轴 ω 与角 θ，写出 R——指数坐标与 Rodrigues 公式（03.1）；反向：给定 R，取回 ω 与 θ——2024 Q1(b) 原题，20 分里的一半（03.2）。</p>
+      <p><b>为什么叫"指数"。</b>因为 R 将以矩阵指数 e 的 ω̂θ 次幂出现——这不是比喻：它是幂级数的字面求和，而无穷级数会精确坍缩成三项。</p>
+    </div>
+    <ul class="goals">
+      <li><span class="chk"></span><span>独立从 ṗ = ω̂ p 出发推出 <b>Rodrigues 三项式</b>，并说出 ω̂³ = −ω̂ 在其中起的作用</span></li>
+      <li><span class="chk"></span><span>给任意 R 五分钟内解出 (ω, θ)，<b>含 θ = π 的除零边界</b>（2024 Q1(b) 核心步骤）</span></li>
+      <li><span class="chk"></span><span>说出指数坐标的<b>不唯一性</b>：同一个 R 对应哪些 (ω, θ)</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 03.1 矩阵指数与 Rodrigues ============ -->
+  <section>
+    <div class="secno"><span class="n">03.1</span><span class="t">矩阵指数<em>FROM ODE TO RODRIGUES</em></span></div>
+    <div class="prose">
+      <p><b>把旋转写成微分方程。</b>点 p 绕单位轴 ω 匀角速旋转：任意时刻速度垂直于 ω 与 p，大小为 |p|·sin∠(ω,p)——恰好是叉积的定义。<b>ṗ(t) = ω × p(t) = ω̂ p(t)</b>，初值 p(0) = p₀。叉积整体升格成一个矩阵作用。</p>
+      <p><b>矩阵也有指数。</b>标量方程 ẋ = ax 的解是 x = e^{at}；把幂级数 e^x = Σ xⁿ/n! 中的 x 换成矩阵 ω̂t 依然良定义——矩阵自乘有定义，每一项都是 3×3 矩阵。于是 <b>p(t) = e^{ω̂t} p₀</b>。矩阵指数不是新记号，是逐项求和。</p>
+      <p><b>无穷级数会坍缩。</b>反对称矩阵满足 <b>ω̂³ = −ω̂</b>（凯莱–哈密顿定理的直接推论：特征值是 0, ±i）。于是 n ≥ 3 的每一项都能化回 I、ω̂、ω̂² 三个矩阵的倍数，三角级数求和后：</p>
+      <p style="padding-left:38px"><b>e 的 ω̂θ 次幂 = I + ω̂ sin θ + ω̂² (1 − cos θ)</b>　——Rodrigues 公式。<b>所有高阶项自动并入 sin 与 (1−cos) 两个系数。</b></p>
+      <p><b>体检三连。</b>θ = 0 时三项式回到 I；ω 取 z 轴时它退化成 02 课的平面旋转
+      <span class="mat small"><span class="r"><span class="c">cos θ</span><span class="c">−sin θ</span></span><span class="r"><span class="c">sin θ</span><span class="c">cos θ</span></span></span>（本演示就取 ω = ẑ，让旋转画在纸面上）；e 的 −ω̂θ 次幂 = 转置。任意 ω、θ 代入，det 恒为 1。</p>
+      <p><b>操作。</b>拖红色手柄扫 θ，右侧看幂级数 S₁、S₂、S₃… 逐项逼近精确解 R——收敛速度就是"级数为何可用"的直观证据。</p>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>ω = ẑ 的平面特例</span><span class="hint">◎ 红色手柄 = 扫转角 θ</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="snap601">转到 60°</button>
+          <button id="snap901">转到 90°</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>幂级数逐项求和 · 收敛过程</span><span class="val" id="thetaOut1">θ = 0°</span></div>
+          <div id="series"></div>
+          <p class="note">S<sub>k</sub> = I + ω̂θ + (ω̂θ)²/2! + … + (ω̂θ)ᵏ/k!，误差取 max |S<sub>k</sub> − R|。
+          <b>k = 5 时误差已小到肉眼不可见</b>——而 Rodrigues 给出的是精确和。</p>
+        </div>
+        <div class="pblock">
+          <div class="plabel"><span>三项式闭合 · 数值验证</span><span class="val" id="detOut">det = 1</span></div>
+          <div class="pipeline" id="pipe1"></div>
+          <p class="note">左：ω̂（由 ω = ẑ 写出，注意 ω̂³ = −ω̂）；中：三个系数矩阵的现值；右：精确 R。
+          <b>三项相加就是级数的无穷项和</b>——这就是坍缩的含义。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03.2 从 R 取回 (ω, θ) ============ -->
+  <section>
+    <div class="secno"><span class="n">03.2</span><span class="t">逆推轴与角<em>R → (ω, θ) · 2024 Q1(b)</em></span></div>
+    <div class="prose">
+      <p><b>逆向的需求。</b>考题给一个具体的数值 R，要求取回 ω 和 θ。出发点是一条迹的恒等式：<b>tr(R) = 1 + 2 cos θ</b>——绕轴方向的特征向量在旋转中不动（特征值 1），另两个特征值是 e 的 ±iθ 次幂，迹是三者之和。</p>
+      <p><b>第一步取 θ。</b><b>θ = arccos( (tr R − 1) / 2 )</b>。arccos 只返回 [0, π]，天然给出"短方式"转角——答题写主值即可。</p>
+      <p><b>第二步取 ω。</b>R − Rᵀ 里只剩 sin θ 的信息：<b>R − Rᵀ = 2 sin θ · ω̂</b>。两边除以 2 sin θ 得 ω̂，再从反对称的三个位置读出 ω 的三个分量。<b>使用条件：sin θ ≠ 0。</b></p>
+      <p><b>π 陷阱（考试爱设的边界）。</b>θ = π 时 sin θ = 0，上一步除零失效。改走对称路线：<b>R + I = 2 ωωᵀ</b>——对角元给 |ωᵢ|，非对角元给符号（ωᵢωⱼ = (R+I)ᵢⱼ / 2）。面板里两条路线并排算给你看，什么时候切换一目了然。</p>
+      <p><b>不唯一性。</b>θ 加 2πk 后 e 不变——指数坐标到 R 是多对一；arccos 的 [0, π] 是人为选定的主值约定。同轴反向（−ω, −θ）给出同一个 R，也是同一件事的另一面。</p>
+      <p><b>操作。</b>按钮选转轴（含「随机斜轴」验证公式对任意 ω 通用）；在画布上<b>左右拖动</b>即扫 θ；点「θ=180°」看通用公式熄灭、对称路线接管。右下角实时核对恢复出的 ω 与真值。</p>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv2" width="860" height="520"></canvas>
+          <div class="cap"><span>R = e 的 ω̂θ 次幂（轴测投影）</span><span class="hint">↔ 左右拖动 = 扫 θ　● 按钮选转轴</span></div>
+        </div>
+        <div class="toolbar">
+          <span class="tlabel">转轴 ω</span>
+          <button class="on" id="axX">x</button>
+          <button id="axY">y</button>
+          <button id="axZ">z</button>
+          <button id="axR">随机斜轴</button>
+          <button id="snap1202">θ=120°</button>
+          <button class="primary" id="snap1802">θ=180°</button>
+          <button id="reset2">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>正向 · Rodrigues 数值</span><span class="val" id="thetaOut2">θ = 0°</span></div>
+          <div class="eq">
+            <var>R</var>
+            <span class="mat sym">
+              <span class="r"><span class="c c1">x<sub>ʙ</sub></span><span class="c c2">y<sub>ʙ</sub></span><span class="c c3">z<sub>ʙ</sub></span></span>
+            </span>
+            <span class="op">→</span>
+            <span class="mat tiny" id="Rmat2"></span>
+          </div>
+          <p class="note">三列就是三个基向量转完后的坐标（02 课的结论在 3D 依然成立）。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>正向拆解 · I + ω̂ sinθ + ω̂²(1−cosθ)</span></div>
+          <div class="pipeline" id="pipe2a"></div>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>逆向 · tr → θ → ω</span><span class="val" id="trOut">tr = 3</span></div>
+          <div class="pipeline" id="pipe2b"></div>
+          <p class="note" id="trapNote">两条路线都可用。把 θ 拖到 180° 附近看通用式熄灭。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03.3 小测 ============ -->
+  <section>
+    <div class="secno"><span class="n">03.3</span><span class="t">小测<em>CHECK</em></span></div>
+    <div class="prose">
+      <p><b>规则。</b>三道题，覆盖本课三个考点：迹定角、π 边界、多解性。做完即时反馈，可随时回到上方面板核对。</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q" data-q="1">
+        <div class="qhead"><span class="qn">Q1</span><span class="qt">某旋转矩阵满足 <code>tr(R) = 0</code>。它的转角 θ 是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span><span class="m">90°</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span><span class="m">120°</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span><span class="m">180°</span></label>
+        </div>
+        <div class="explain" data-for="1"></div>
+      </div>
+
+      <div class="q" data-q="2">
+        <div class="qhead"><span class="qn">Q2</span><span class="qt">已知 <code>θ = π</code>。从 R 恢复 ω 应当用哪条路线？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>
+            <span class="m">ω̂ = (R − Rᵀ) / (2 sin θ)</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>
+            <span class="m">R + I = 2ωωᵀ，从对称部分读出 ω</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>
+            <span class="m">对 R 的每一列分别求 arccos</span></label>
+        </div>
+        <div class="explain" data-for="2"></div>
+      </div>
+
+      <div class="q" data-q="3">
+        <div class="qhead"><span class="qn">Q3</span><span class="qt">同一个旋转矩阵 R，指数坐标 (ω, θ) 唯一吗？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span><span class="m">唯一</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span><span class="m">不唯一：θ 可加 2πk；(−ω, −θ) 也给出同一个 R</span></label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span><span class="m">不唯一：ω 的方向可以任取</span></label>
+        </div>
+        <div class="explain" data-for="3"></div>
+      </div>
+
+      <div class="score"><span class="big" id="scoreNum">0</span><span class="of">/ 3 · 答对即刻计入</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Patchouli · 大图书馆课件工坊 · 03 课 v1 · 2026-11</span>
+    <button class="next" data-hermes-send="继续做下一节网页课件：02章的螺旋运动与齐次变换指数（K06/K07），沿用瑞士风格与交互结构">下一节：螺旋与齐次变换指数 →</button>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

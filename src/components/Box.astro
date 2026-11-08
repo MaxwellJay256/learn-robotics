@@ -1,0 +1,8 @@
+---
+/* 提示框：warn=true 时左侧竖线转红 */
+const { warn = false, title } = Astro.props;
+---
+<div class={warn ? 'box warn' : 'box'}>
+  <div class="lbl">{title}</div>
+  <slot />
+</div>

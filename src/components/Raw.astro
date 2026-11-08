@@ -1,0 +1,5 @@
+---
+/* 把一段原始 HTML 字符串原样注入（交互块沿用旧 HTML 片段） */
+const { html } = Astro.props;
+---
+<Fragment set:html={html} />

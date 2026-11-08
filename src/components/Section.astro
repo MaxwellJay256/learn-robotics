@@ -1,0 +1,8 @@
+---
+/* 章节容器：编号 + 中英标题，与旧 HTML 的 .secno 结构一致 */
+const { n, t, en = '' } = Astro.props;
+---
+<section>
+  <div class="secno"><span class="n">{n}</span><span class="t">{t}{en && <em>{en}</em>}</span></div>
+  <slot />
+</section>

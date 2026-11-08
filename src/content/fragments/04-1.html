@@ -1,0 +1,47 @@
+<div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>Screw axis · twist · ghost</span><span class="hint">◎ 红手柄 = 扫 θ　● 黑手柄 = 拖轴位置 r / 轴方向 ω</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim1">从零位形演示</button>
+          <button id="snap90">转到 90°</button>
+          <button id="toRot">退化为纯旋转</button>
+          <button id="toTrans">退化为纯平移</button>
+          <button id="reset1">重置</button>
+          <span class="tlabel">螺距 h</span>
+          <input class="range" id="h1" type="range" min="0" max="0.6" step="0.01" value="0.35">
+          <b class="val" id="h1v">0.35</b>
+          <span class="tlabel">转动半径 ρ</span>
+          <input class="range" id="r1" type="range" min="0.3" max="1.8" step="0.01" value="0.9">
+          <b class="val" id="r1v">0.90</b>
+        </div>
+      </div>
+
+      <div class="panel">
+        
+        <div class="pblock">
+          <div class="plabel"><span>旋量 · 平移分量与转轴</span><span class="val" id="xiOut">θ = 0°</span></div>
+          <div class="eq"><span class="mathout" id="XiVec"></span></div>
+          <div class="legend">
+            <span class="l1"><i></i>转轴方向</span>
+            <span class="l2"><i></i>平移分量（原点速度）</span>
+          </div>
+          <p class="note" id="screwNote">螺距 <b>h</b> 与沿轴位移 <b>d = hθ</b> 在这里实时显示。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>指数 · 分块对照</span><span class="val" id="expOut">g live</span></div>
+          <div class="eq"><span class="mathout" id="ExpForm"></span></div>
+          <div class="eq"><span class="mathout" id="Exp4"></span></div>
+          <p class="note">左上 = 03 的 Rodrigues（三列按 \(x/y/z\) 上色）；右上一列 = 圆周位移项与沿轴位移 \(h\theta\) 之和。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>退化 · 转轴归零</span><span class="val" id="degenOut">纯平移</span></div>
+          <div class="eq"><span class="mathout" id="Degen4"></span></div>
+          <p class="note">同一块位置，左上塌成 <b>I</b>，右上只剩 <b>vθ</b>。</p>
+        </div>
+      </div>
+    </div>

@@ -1,0 +1,342 @@
+<!-- ============ 03.0 引言 ============ -->
+  <section>
+    <div class="secno"><span class="n">03.0</span><span class="t">引言<em>WHY AXIS + ANGLE</em></span></div>
+    <div class="prose">
+
+      <h3><span class="k">1</span>旋转矩阵的三个尴尬</h3>
+      <p>用 9 个数描述 3 个自由度：其中 6 个是约束（三列正交、单位长、\(\det = 1\)），信息高度冗余。<b>可看一个 \(R\)，你说不出“绕哪根轴、转了多少”</b>——而这恰恰是人描述转动时最先想到的东西。</p>
+      <p>更麻烦的是两件事：<b>不能直接插值</b>（两个旋转矩阵取平均，结果一般不满足 \(R^{\mathsf{T}}R = I\)）；<b>不能直接求导</b>（速度、角速度都要对时间求导，而 \(R\) 的导数不再是旋转矩阵）。</p>
+      <p>三条指向同一个结论：\(R\) 记的是“转完之后的坐标”，不是“转动本身”。</p>
+
+      <h3><span class="k">2</span>换一套参数：一根轴加一个角</h3>
+      <p>欧拉定理：<b>任何姿态都可以由“绕某一根轴转一个角”一次得到</b>。于是姿态可以记成 \((\omega,\theta)\)——\(\omega\) 是单位向量（2 个自由度），\(\theta\) 是转角（1 个），合起来仍是 3 个。</p>
+      <p>这套参数的好处正好抵消上面的三个尴尬：直观（轴和角都画得出来）、能插值（轴不动、角线性变，中间结果仍然是旋转）、能求导（\(\dot\theta\,\omega\) 就是角速度）。</p>
+
+      <h3><span class="k">3</span>为什么叫“指数”</h3>
+      <p>因为 \(R\) 会写成 \(e^{\hat\omega\theta}\)——矩阵指数，字面意义上的幂级数求和，不是记号游戏。这个级数会精确坍缩成三项，所以手算可行，这是 03.1 的主线。</p>
+      <p>数学上这叫李群与李代数：\(\hat\omega\) 属于 \(so(3)\)（一个三维向量空间），指数映射把它送到 \(SO(3)\)。这门课不需要这套语言，但看到 \(e^{\hat\omega\theta}\) 时要知道两件事：<b>它一定能算出来，算出来一定是旋转</b>。</p>
+
+      <h3><span class="k">4</span>本课做两件事</h3>
+      <p><b>正向</b>：给定 \(\omega\) 与 \(\theta\)，写出 \(R\)。从 \(\dot p = \hat\omega p\) 出发，用 \(\hat\omega^{3} = -\hat\omega\) 把级数压成三项，得到 Rodrigues 公式（03.1）。</p>
+      <p><b>逆向</b>：给定数值 \(R\)，取回 \((\omega,\theta)\)。迹定角、反对称部分定轴，\(\theta = \pi\) 时改走对称路线（03.2，2024 Q1(b)）。</p>
+      <p>正向考“会算”，逆向考“会解”，卷面上两种都出。逆向那两个边界（\(\theta\to0\) 与 \(\theta=\pi\)）才是分水岭。</p>
+
+    </div>
+    <ul class="goals">
+
+      <li><span class="chk"></span><span>能从 \(\dot p = \omega\times p\) 推到三项式，并说清 \(\hat\omega^{3} = -\hat\omega\) 在哪一步起作用</span></li>
+      <li><span class="chk"></span><span>能默写元素形式的 Rodrigues，或者 30 秒内按规则现推出来</span></li>
+      <li><span class="chk"></span><span>给任意 \(R\)，五分钟内解出 \((\omega,\theta)\)，含 \(\theta=\pi\) 的对称路线</span></li>
+      <li><span class="chk"></span><span>能说出 \((\omega,\theta)\) 到 \(R\) 为什么是多对一，以及主值约定是怎么来的</span></li>
+
+    </ul>
+  </section>
+
+  <!-- ============ 03.1 矩阵指数与 Rodrigues ============ -->
+  <section>
+    <div class="secno"><span class="n">03.1</span><span class="t">矩阵指数<em>FROM ODE TO RODRIGUES</em></span></div>
+    <div class="prose">
+
+      <h3><span class="k">1</span>先把“转起来”写成方程</h3>
+      <p>刚体绕单位轴 \(\omega\) 转动，角速度取 1（把时间直接当角度用）。刚体上一点 \(p\)：它到轴的距离恒定，所以速度只能沿圆周切向——<b>垂直于 \(\omega\)，也垂直于 \(p\)</b>。速度大小是 \(|p|\sin\varphi\)（\(\varphi\) 是 \(p\) 与轴的夹角，\(|p|\sin\varphi\) 正是点到轴的距离），而 \(\omega\times p\) 的大小正好是它。于是</p>
+      <div class="formula">\[ \dot p = \omega \times p \]</div>
+      <p>叉积对 \(p\) 是线性的，可以写成一个矩阵乘向量。定义</p>
+      <div class="formula">\[ \hat\omega = \begin{bmatrix} 0 & -\omega_3 & \omega_2 \\ \omega_3 & 0 & -\omega_1 \\ -\omega_2 & \omega_1 & 0 \end{bmatrix}, \qquad \omega\times p = \hat\omega\,p \]</div>
+      <p>\(\hat\omega\) 叫 \(\omega\) 的反对称矩阵（读作 “hat”）。三条性质：\(\hat\omega^{\mathsf{T}} = -\hat\omega\)，对角全零，9 个数里只有 3 个独立——正好是 \(\omega\) 的三个分量。<b>叉积这个几何操作，被整形成了一次矩阵乘法。</b></p>
+
+      <h3><span class="k">2</span>解方程，引出矩阵指数</h3>
+      <p>\(\dot p = \hat\omega p\) 与标量方程 \(\dot x = ax\) 形状完全一样，解也一样：\(p(t) = e^{\hat\omega t}p_0\)。区别只在指数是矩阵，所以得先定义“矩阵的 \(e\)”：</p>
+      <div class="formula">\[ e^{M} = I + M + \frac{M^{2}}{2!} + \frac{M^{3}}{3!} + \cdots \]</div>
+      <p>这个级数对任何方阵都收敛（按矩阵范数），每一项都是同尺寸矩阵，加法有意义。所以 \(p(t)\) 的解不是猜的，是逐项加出来的。令 \(t = \theta\)（单位角速度下时间就是角度），得到</p>
+      <div class="formula">\[ R(\theta) = e^{\hat\omega\theta} \]</div>
+      <p>顺带得到一个后面要用的结论：<b>任何旋转矩阵都是某个反对称矩阵的指数</b>。03.2 反过来从 \(R\) 取轴和角，合法性就靠这一条。</p>
+
+      <h3><span class="k">3</span>关键一步：\(\hat\omega^{3} = -\hat\omega\)</h3>
+      <p>按定义硬算，级数有无穷多项，手算不了。救星是一个恒等式。先证中间结果：\(|\omega| = 1\) 时</p>
+      <div class="formula">\[ \hat\omega^{2} = \omega\omega^{\mathsf{T}} - I \]</div>
+      <p>最快的验法取 \(\omega = (0,0,1)\)，两侧都算一遍：</p>
+      <div class="formula">\[ \hat\omega = \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 0 \end{bmatrix}, \qquad \hat\omega^{2} = \begin{bmatrix} -1 & 0 & 0 \\ 0 & -1 & 0 \\ 0 & 0 & 0 \end{bmatrix} = \omega\omega^{\mathsf{T}} - I \]</div>
+      <p>一般情形由坐标旋转不变性同样成立。有了它就能算三次方：\(\hat\omega^{3} = \hat\omega(\omega\omega^{\mathsf{T}} - I) = (\hat\omega\omega)\omega^{\mathsf{T}} - \hat\omega\)。而 \(\hat\omega\omega = \omega\times\omega = 0\)，所以</p>
+      <div class="formula">\[ \hat\omega^{3} = -\hat\omega \]</div>
+      <p>这是本节的发动机。它意味着 \(\hat\omega\) 的幂只有一个四步循环：\(I,\ \hat\omega,\ \hat\omega^{2},\ -\hat\omega,\ -\hat\omega^{2},\ \hat\omega\)，如此往复——三次以上全部回到前三档。</p>
+
+      <h3><span class="k">4</span>无穷级数坍缩成三项</h3>
+      <p>把 \(e^{\hat\omega\theta}\) 按 \(\theta\) 展开，用上面的循环把 \(\theta^{3}\) 之后的项全部拉回前三档：奇次项只剩 \(\hat\omega\)，偶次项只剩 \(I\) 与 \(\hat\omega^{2}\)。</p>
+      <div class="formula">\[ e^{\hat\omega\theta} = I + \left(\theta - \frac{\theta^{3}}{3!} + \frac{\theta^{5}}{5!} - \cdots\right)\hat\omega + \left(\frac{\theta^{2}}{2!} - \frac{\theta^{4}}{4!} + \cdots\right)\hat\omega^{2} \]</div>
+      <p>两个括号分别是 \(\sin\theta\) 与 \(1-\cos\theta\)。于是</p>
+      <div class="formula">\[ R = I + \sin\theta\,\hat\omega + (1-\cos\theta)\,\hat\omega^{2} \]</div>
+      <p>这就是 <b>Rodrigues 公式</b>。值得亲手推一遍：它说明“无穷级数”和“三项式”不是两个公式，是同一个东西的两种写法——前者告诉你它从哪来，后者让你能手算。</p>
+
+      <h3><span class="k">5</span>写成元素形式（考试要写的那一版）</h3>
+      <p>设 \(\omega = (\omega_1,\omega_2,\omega_3)\)，记 \(c = \cos\theta\)、\(s = \sin\theta\)、\(v = 1-\cos\theta\)：</p>
+      <div class="formula">\[ R = \begin{bmatrix}
+        c+\omega_1^{2}v & \omega_1\omega_2 v-\omega_3 s & \omega_1\omega_3 v+\omega_2 s \\
+        \omega_2\omega_1 v+\omega_3 s & c+\omega_2^{2}v & \omega_2\omega_3 v-\omega_1 s \\
+        \omega_3\omega_1 v-\omega_2 s & \omega_3\omega_2 v+\omega_1 s & c+\omega_3^{2}v
+      \end{bmatrix} \]</div>
+      <p>不用背。<b>对角元一律 \(c+\omega_i^{2}v\)</b>；非对角元是 \(\omega_i\omega_j v\) 再加一项 \(\pm\omega_k s\)，其中 \(k\) 是剩下的那个下标——按 \(1\to2\to3\to1\) 的顺序取负号，反序取正号。照这条规则现推，三十秒写完，比回忆公式可靠。</p>
+
+      <h3><span class="k">6</span>三条体检，加一条使用前提</h3>
+      <p><b>\(\theta = 0\)</b>：\(R = I\)，三项式退化正确。<b>\(\omega = \hat{z}\)</b>：左上 \(2\times2\) 块正好是 02 课的平面旋转，第 3 行第 3 列是 \(c+v = 1\)，与二维情形完全兼容（本演示就取这个特例，让旋转画在纸面上）。<b>正交性</b>：任意 \(\omega\)、\(\theta\) 代入，\(R^{\mathsf{T}}R = I\) 且 \(\det R = 1\)。</p>
+      <p>这三条都能当验算：写完 \(R\)，先查 \(\det\)，再查 \(\theta = 0\) 的退化。<b>小角度</b>时还有 \(R \approx I + \theta\hat\omega\)——这正是角速度进入运动学的入口。</p>
+      <p><b>使用前提：\(\omega\) 必须是单位向量。</b>公式里的 \(\theta\) 是“绕轴转过的角”。若代进去的是任意向量 \(u\)（\(|u|\neq1\)），\(e^{\hat u\theta}\) 的实际转角是 \(|u|\theta\)。要么先单位化，要么把 \(|u|\) 并进角度里——混用会让答案整体差一个倍数，而且 \(\det\) 检查看不出来。</p>
+
+      <h3><span class="k">7</span>为什么顺序不能交换</h3>
+      <p>\(e^{A}e^{B} = e^{A+B}\) 一般只在 \(A\)、\(B\) 可交换时成立。两个 hat 矩阵一般不交换，它们的交换子满足 \([\hat\omega_1,\hat\omega_2] = \widehat{\omega_1\times\omega_2}\)，只有两轴平行时才为零。</p>
+      <p>所以两次旋转的顺序必须原样保留——这是 02.1“下标接龙”的深层原因，也是机器人姿态里“先绕哪个轴转”必须交代清楚的原因。二维是特例：所有平面旋转同轴，交换子恒为零，所以总能交换。</p>
+
+      <h3><span class="k">8</span>面板：看级数怎么收敛</h3>
+      <p>右侧 \(S_1\) 到 \(S_5\) 是幂级数的部分和，误差列是 \(\max|S_k - R|\)。\(\theta = 60^\circ\) 时 \(S_1\) 差得远、\(S_3\) 已经很近、\(S_5\) 肉眼无差；把 \(\theta\) 拖到 \(150^\circ\)，收敛明显变慢——级数仍然收敛，只是前几项不够用了。</p>
+      <p>这正好说明三项式的价值：<b>它给的是精确和，不是“项数够多”的近似</b>。下面那块“三项式闭合”把 \(I\)、\(\sin\theta\,\hat\omega\)、\((1-\cos\theta)\hat\omega^{2}\) 分开算再相加，结果与精确 \(R\) 逐位相同。</p>
+
+      <div class="box warn">
+        <div class="lbl">常见错误</div>
+        <ul>
+          <li>\(\omega\) 忘了单位化。</li>
+          <li>把 \(\hat\omega^{3}\) 当成 \(0\)。三维旋转里它是 \(-\hat\omega\)；幂零矩阵出现在别的地方，别混。</li>
+          <li>只写 \(I + \sin\theta\,\hat\omega\)，丢掉 \((1-\cos\theta)\hat\omega^{2}\)。小角度时看着差不多，大角度全错。</li>
+          <li>以为 \(e^{\hat\omega\theta}\) 一定可对角化、一定有 3 个实特征值。它一般只有 1 个实特征值。</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="lbl">离开本节前，合上文字回答</div>
+        <ul>
+          <li>\(\omega = \hat{z}\)、\(\theta = 60^\circ\) 时，写出 \(R\) 的前两列。</li>
+          <li>为什么 \(\hat\omega^{3} = -\hat\omega\) 能保证级数化成三项？</li>
+          <li>\(|u| = 2\)、\(\theta = 30^\circ\) 时，\(e^{\hat u\theta}\) 实际转了多少度？</li>
+          <li>\(\hat\omega^{2}\) 为什么是<b>对称</b>矩阵？</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>ω = ẑ 的平面特例</span><span class="hint">◎ 红色手柄 = 扫转角 θ</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="snap601">转到 60°</button>
+          <button id="snap901">转到 90°</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>幂级数逐项求和 · 收敛过程</span><span class="val" id="thetaOut1">θ = 0°</span></div>
+          <div id="series"></div>
+          <p class="note">\(S_k = I + \hat{\omega}\theta + \frac{(\hat{\omega}\theta)^2}{2!} + \dots + \frac{(\hat{\omega}\theta)^k}{k!}\)，误差取 \(\max|S_k - R|\)。<b>\(k=5\) 时误差已小到肉眼不可见</b>——而 Rodrigues 给出的是精确和。</p>
+        </div>
+        <div class="pblock">
+          <div class="plabel"><span>三项式闭合 · 数值验证</span><span class="val" id="detOut">det = 1</span></div>
+          <div class="pipeline" id="pipe1"></div>
+          <p class="note">左：\(\hat{\omega}\)（由 \(\omega = \hat{z}\) 写出，注意 \(\hat{\omega}^{3} = -\hat{\omega}\)）；中：三个系数矩阵的现值；右：精确 \(R\)。<b>三项相加就是级数的无穷项和</b>——这就是坍缩的含义。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3><span class="k">9</span>三维实例：任意转动 = 一条轴 + 一个角</h3>
+      <p>欧拉定理保证：任何旋转矩阵都有特征值为 1 的特征向量——<b>那条不动的轴</b>；转角由迹给出。所以“姿态变了”总可以改写成“绕某条轴转了某个角”。下面这块把改写做成一件事：<b>拖动一个点，图里自动画出转轴与转角</b>。</p>
+      <p>两个约定。其一，这里只处理<b>纯转动</b>（轴过原点）；带平移的位姿变换要等螺旋运动那一节，那时轴可以不过原点。其二，<b>一个点只给两个约束</b>：把 \(p_0\) 拖到新方向 \(\hat p\) 的转动有无穷多个（还能绕 \(p_0\) 自转任意角）。演示采用“最小转动”约定：轴同时垂直于 \(p_0\) 与 \(\hat p\)，\(\hat\omega = \dfrac{p_0\times\hat p}{|p_0\times\hat p|}\)，\(\theta = \operatorname{atan2}\!\left(|p_0\times\hat p|,\; p_0\cdot\hat p\right)\)。把点推到目的方向，不做多余扭转，这与直觉一致。</p>
+      <p>点拖到位后，页面走两条路：先用 \((\hat\omega,\theta)\) 造 \(R\)（本节的正向三项式），再用 03.2 的逆推把它拆回来（\(\operatorname{tr}\to\theta\)，\((R-R^{\mathsf T})/(2\sin\theta)\to\hat\omega\)）。<b>两条路必须给出同一组数</b>，右侧面板实时对照。拖动时留意：红线是解出的轴；θ 弧随拖动同步伸缩；轴和角只随点走，不随视角变。</p>
+      <p><b>位置与姿态分开调。</b>拖点只定<b>方向</b>（两个自由度）；三轴顶端的圆环手柄让刚体绕 \(\hat p\) <b>原地自转</b>（第三个自由度）。自转 \(\phi\neq0\) 之后，复合转动的轴就不垂直于两点——它偏离最小转动的轴（灰色虚线弧），只能靠迹与 \(R-R^{\mathsf T}\) 反解。把柄转半圈再看右侧「定轴」那一行，轴会跟着摆动。</p>
+      <p>边界情形先说清。\(\hat p\to p_0\) 时 \(\theta\to0\)，轴无意义（\(R=I\)）；\(\hat p\to-p_0\) 时 \(\theta\to180^\circ\)，<b>轴不唯一</b>——任何垂直于 \(p_0\) 的轴都行，此时 \((R-R^{\mathsf T})/(2\sin\theta)\) 除零，与 03.2 的 π 陷阱是同一件事，面板会亮红提示。</p>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv3" width="860" height="520"></canvas>
+          <div class="cap"><span>拖动黑点 p 定方向；拖三轴顶端圆环原地改朝向</span><span class="hint">◎ 点 = 位置　◎ 圆环 = 绕 p̂ 自转</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="snap903">θ = 90°</button>
+          <button id="snap1803">θ = 180°</button>
+          <button id="tw903">自转 90°</button>
+          <button id="reset3">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>拖动产生的转动 · R 数值</span><span class="val" id="thetaOut3">θ = 0°</span></div>
+          <div class="eq">
+            <span>\(R =\)</span>
+            <span class="mathout" id="Rmat3"></span>
+          </div>
+          <p class="note">\(R\) 由 \((\hat\omega,\theta)\) 用本节的三项式即时造出——和上面那块面板同一条正向路。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>反向求解 · 轴与角自动解出</span><span class="val" id="pOut3">cosθ = 1.00</span></div>
+          <div class="pipeline" id="pipe3"></div>
+          <p class="note" id="trap3">两条路给出的数实时对照。把点拖到 p₀ 的正对面，看轴不唯一的边界。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03.2 从 R 取回 (ω, θ) ============ -->
+  <section>
+    <div class="secno"><span class="n">03.2</span><span class="t">逆推轴与角<em>R → (ω, θ) · 2024 Q1(b)</em></span></div>
+    <div class="prose">
+
+      <h3><span class="k">1</span>问题，以及两个边界</h3>
+      <p>考题给一个具体的数值 \(R\)（\(3\times3\) 全是数），要求取回 \(\omega\) 与 \(\theta\)。这是 2024 Q1(b)。公式本身只有两行，真正的难点在两个边界：<b>\(\theta\) 接近 \(0\)</b>（轴无定义）与 <b>\(\theta = \pi\)</b>（通用式除零）。</p>
+
+      <h3><span class="k">2</span>迹定角</h3>
+      <p>出发点是一条只用到对角线的恒等式：</p>
+      <div class="formula">\[ \operatorname{tr}R = 1 + 2\cos\theta \]</div>
+      <p>两条推导，记一条就够。</p>
+      <p><b>特征值路线</b>：绕轴方向在旋转中不动，特征值是 \(1\)；垂直于轴的平面内是转角为 \(\theta\) 的二维旋转，特征值是 \(e^{\pm i\theta}\)。迹等于特征值之和，得 \(1 + 2\cos\theta\)。</p>
+      <p><b>直接取迹路线</b>（考场更实用）：对 Rodrigues 逐项取迹。\(\operatorname{tr}I = 3\)；\(\operatorname{tr}\hat\omega = 0\)（对角全零）；\(\operatorname{tr}\hat\omega^{2} = \operatorname{tr}(\omega\omega^{\mathsf{T}} - I) = 1 - 3 = -2\)。于是 \(\operatorname{tr}R = 3 - 2(1-\cos\theta) = 1 + 2\cos\theta\)。三十秒，不依赖任何定理。</p>
+
+      <h3><span class="k">3</span>于是 \(\theta\)</h3>
+      <div class="formula">\[ \theta = \arccos\!\left(\frac{\operatorname{tr}R - 1}{2}\right) \]</div>
+      <p>\(\arccos\) 的值域是 \([0,\pi]\)，所以这一步天然给出主值（短方式转角），答题写主值即可。数值实现时要先把它 clamp 到 \([-1,1]\)：浮点误差可能让 \((\operatorname{tr}R-1)/2\) 变成 \(1.0000000002\)，\(\arccos\) 直接返回 NaN。</p>
+
+      <h3><span class="k">4</span>反对称部分定轴</h3>
+      <p>把 \(R\) 减去它的转置，对称的那部分（\(I\) 与 \(\hat\omega^{2}\)）全部抵消，只剩含 \(\sin\theta\) 的一项：</p>
+      <div class="formula">\[ R - R^{\mathsf{T}} = 2\sin\theta\,\hat\omega \]</div>
+      <p>所以</p>
+      <div class="formula">\[ \hat\omega = \frac{R - R^{\mathsf{T}}}{2\sin\theta} \]</div>
+      <p>从反对称矩阵的上三角读出三个分量。写成单个分量的形式，符号最容易错：</p>
+      <div class="formula">\[ \omega = \frac{1}{2\sin\theta} \begin{bmatrix} R_{32} - R_{23} \\ R_{13} - R_{31} \\ R_{21} - R_{12} \end{bmatrix} \]</div>
+      <p>记忆：每个分量都是“<b>下三角减上三角</b>”，下标按 \(1\to2\to3\to1\) 循环。<b>使用条件：\(\sin\theta \neq 0\)。</b></p>
+
+      <h3><span class="k">5</span>\(\theta\to0\)：不是除零 bug，是无解</h3>
+      <p>\(\theta\to0\) 时 \(R\to I\)，\(\sin\theta\to0\)，公式爆炸。但此时“轴”在物理上根本没有定义——转 \(0\) 度，绕哪根轴都一样。所以这个边界<b>没有唯一答案</b>，题目不会这么出。</p>
+      <p>工程实现里给一个容差就够：\(|\sin\theta| < 10^{-6}\) 时直接返回 \(\theta = 0\)、轴任取（比如 \((0,0,1)\)）。</p>
+
+      <h3><span class="k">6</span>\(\theta = \pi\)：改走对称路线</h3>
+      <p>\(\theta = \pi\) 时 \(\sin\theta = 0\)，通用式除零。但此时 Rodrigues 反而变简单了：\(\sin\pi = 0\)、\(1-\cos\pi = 2\)，所以 \(R = I + 2\hat\omega^{2}\)。代入 \(\hat\omega^{2} = \omega\omega^{\mathsf{T}} - I\)：</p>
+      <div class="formula">\[ R + I = 2\,\omega\omega^{\mathsf{T}} \]</div>
+      <p>右边是秩 1 的对称矩阵，可以直接读出 \(\omega\)：<b>对角元给绝对值</b>，\((R_{ii}+1)/2 = \omega_i^{2}\)；<b>非对角元给符号</b>，\((R_{ij}+R_{ji})/2 = \omega_i\omega_j\)。</p>
+      <p><b>操作四步</b>：① 在 \(R+I\) 的对角元里找最大的那个 \(i\)，避免除以接近 \(0\) 的量；② 取 \(\omega_i = \sqrt{(R_{ii}+1)/2}\)；③ 其余分量用 \(\omega_j = \dfrac{R_{ij}+R_{ji}}{2\omega_i}\)；④ 检查 \(|\omega| = 1\)。</p>
+      <p><b>符号定不下来，这是约定，不是推导。</b>\(\omega\) 与 \(-\omega\) 配同一个 \(\theta=\pi\) 给出完全相同的 \(R\)，从 \(R\) 本身无法判断哪一个“对”。常见约定是让<b>绝对值最大的那个分量取正</b>（考卷上多半直接写 \(\omega_1>0\)，前提是 \(\omega_1\neq0\)）；定下它，其余分量按公式跟着算，一致性自动成立。</p>
+      <p>这与 03.2 第 3 小节 \(\arccos\) 取 \([0,\pi]\) 是同一类约定：<b>答案写成 \(\omega\) 或 \(-\omega\) 都算对</b>，答题时注明一句“取 \(\omega_1>0\)”即可。所以第 ④ 步只查 \(|\omega|=1\)——符号不归它管。</p>
+      <p>面板把两条路线并排显示：把 \(\theta\) 拖到 \(180^\circ\) 附近，通用式那一行变灰打叉，备用式接管，标签上会写明按哪个对角元取的轴。</p>
+      <p><b>进阶一句</b>：\(\theta\) 只是接近 \(\pi\) 而不等于 \(\pi\) 时，通用式在数值上除以很小的 \(\sin\theta\)，误差被放大；这时改用 \(R+I\) 的对角元读出 \(\omega\) 再单位化，比通用式稳得多。生产代码通常干脆转四元数再取轴角。考试只考 \(\theta\) 恰好等于 \(\pi\)，走上面的四步就够。</p>
+
+      <h3><span class="k">7</span>数值例子：\(\operatorname{tr}R = 0\)</h3>
+      <p>先只用迹：\(\cos\theta = (0-1)/2 = -1/2\)，\(\theta = 120^\circ\)。这就是 03.3 第一题的答案。</p>
+      <p>反过来的方向更值得走一遍。取 \(\omega = (1,1,1)/\sqrt{3}\)、\(\theta = 120^\circ\)，代元素形式：对角元 \(c+\omega_i^{2}v = -\tfrac{1}{2} + \tfrac{1}{3}\cdot\tfrac{3}{2} = 0\)；非对角元按 \(1\to2\to3\) 的顺序取 \(\omega_i\omega_j v - \omega_k s = \tfrac{1}{2} - \tfrac{1}{\sqrt{3}}\cdot\tfrac{\sqrt{3}}{2} = 0\)，反序对取正号得 \(1\)。于是</p>
+      <div class="formula">\[ R = \begin{bmatrix} 0 & 0 & 1 \\ 1 & 0 & 0 \\ 0 & 1 & 0 \end{bmatrix} \]</div>
+      <p>这是一个循环置换矩阵：三行正交，\(\det R = 1\)，\(\operatorname{tr}R = 0\)。逆推反过来验：\(R - R^{\mathsf{T}}\) 的第 1 行是 \(\sqrt{3}\,(0,-\omega_3,\omega_2) = (0,-1,1)\)，读出 \(\omega_2 = \omega_3 = 1/\sqrt{3}\)，与 \(\omega_1\) 对称。</p>
+
+      <h3><span class="k">8</span>不唯一性：多对一</h3>
+      <p>\((\omega,\theta)\) 到 \(R\) 是多对一：\(\theta\) 加 \(2\pi k\) 后 \(e^{\hat\omega\theta}\) 不变；\((-\omega,-\theta)\) 给出同一个 \(R\)；\(\theta = 0\) 时轴任意；\(\theta = \pi\) 时 \(\pm\omega\) 都行。</p>
+      <p>\(\arccos\) 的 \([0,\pi]\) 只是人为选定的<b>主值约定</b>，不是数学上的唯一。这不算缺陷：姿态本身就不记录“转了几圈”，参数化必须把这份信息丢掉。</p>
+      <p>考试里题目没指定时，写主值，并在旁边注明“其余解为 \(\theta + 2\pi k\) 与 \((-\omega,-\theta)\)”，通常能补回半步分。</p>
+
+      <h3><span class="k">9</span>考场四步与面板操作</h3>
+      <p><b>四步</b>：① \(\operatorname{tr}R \to \cos\theta \to \theta\)；② 算 \(\sin\theta\)，判断是否接近 \(0\)；③ 不为零走反对称式，为零走对称式；④ <b>代回 Rodrigues 验算</b>，看能否复原 \(R\)。</p>
+      <p>第 ④ 步只要三十秒，却能抓住几乎所有的符号错和下标错，比反复盯着公式检查有效得多。<b>面板</b>：按钮切换转轴（含“随机斜轴”，用来验证公式对任意 \(\omega\) 成立，而不只是坐标轴）；左右拖动扫 \(\theta\)；点 \(\theta = 180^\circ\) 看通用式熄灭、对称式接管。</p>
+
+      <div class="box warn">
+        <div class="lbl">常见错误</div>
+        <ul>
+          <li>反对称式里下标循环写反，\(\omega\) 整体反号。代回 \(R\) 验算能立刻抓出来。</li>
+          <li>\(\theta = \pi\) 或接近 \(\pi\) 时硬套 \(\sin\theta\) 分母，得到 \(\infty\) 或 NaN。</li>
+          <li>用 \(\arccos\) 前不 clamp，浮点误差导致 NaN。</li>
+          <li>算出 \(\omega = (1,1,1)\) 就直接交卷，忘了除以 \(\sqrt{3}\)。</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="lbl">离开本节前，合上文字回答</div>
+        <ul>
+          <li>\(\operatorname{tr}R = 3\) 时 \(\theta\) 是多少？\(\operatorname{tr}R = -1\) 呢？</li>
+          <li>\(R\) 是上一段那个循环置换矩阵时，五分钟内解出 \((\omega,\theta)\)。</li>
+          <li>为什么 \(\theta = \pi\) 时 \(R+I\) 的秩是 1？</li>
+          <li>同一根轴、同一个 \(R\)，指数坐标能写出几组解？</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv2" width="860" height="520"></canvas>
+          <div class="cap"><span>R = e 的 ω̂θ 次幂（轴测投影）</span><span class="hint">↔ 左右拖动 = 扫 θ　● 按钮选转轴</span></div>
+        </div>
+        <div class="toolbar">
+          <span class="tlabel">转轴 ω</span>
+          <button class="on" id="axX">x</button>
+          <button id="axY">y</button>
+          <button id="axZ">z</button>
+          <button id="axR">随机斜轴</button>
+          <button id="snap1202">θ=120°</button>
+          <button class="primary" id="snap1802">θ=180°</button>
+          <button id="reset2">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>正向 · Rodrigues 数值</span><span class="val" id="thetaOut2">θ = 0°</span></div>
+          <div class="eq">
+            <span>\(R = \begin{bmatrix} x_B & y_B & z_B \end{bmatrix} =\)</span>
+            <span class="mathout" id="Rmat2"></span>
+          </div>
+          <p class="note">三列就是三个基向量转完后的坐标（02 课的结论在三维依然成立）。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>正向拆解 · I + ω̂ sinθ + ω̂²(1−cosθ)</span></div>
+          <div class="pipeline" id="pipe2a"></div>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>逆向 · tr → θ → ω</span><span class="val" id="trOut">tr = 3</span></div>
+          <div class="pipeline" id="pipe2b"></div>
+          <p class="note" id="trapNote">两条路线都可用。把 θ 拖到 180° 附近看通用式熄灭。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03.3 小测 ============ -->
+  <section>
+    <div class="secno"><span class="n">03.3</span><span class="t">小测<em>CHECK</em></span></div>
+    <div class="prose">
+      <p><b>规则。</b>三道题，覆盖本课三个考点：迹定角、\(\pi\) 边界、多解性。做完即时反馈，可随时回到上方面板核对。</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q" data-q="1">
+        <div class="qhead"><span class="qn">Q1</span><span class="qt">某旋转矩阵满足 \(\operatorname{tr}R = 0\)。它的转角 \(\theta\) 是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>\(90^\circ\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>\(120^\circ\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>\(180^\circ\)</label>
+        </div>
+        <div class="explain" data-for="1"></div>
+      </div>
+
+      <div class="q" data-q="2">
+        <div class="qhead"><span class="qn">Q2</span><span class="qt">已知 \(\theta = \pi\)。从 \(R\) 恢复 \(\omega\) 应当用哪条路线？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\(\hat{\omega} = \dfrac{R - R^{\mathsf{T}}}{2\sin\theta}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\(R + I = 2\omega\omega^{\mathsf{T}}\)，从对称部分读出 \(\omega\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>对 \(R\) 的每一列分别求 \(\arccos\)</label>
+        </div>
+        <div class="explain" data-for="2"></div>
+      </div>
+
+      <div class="q" data-q="3">
+        <div class="qhead"><span class="qn">Q3</span><span class="qt">同一个旋转矩阵 \(R\)，指数坐标 \((\omega,\theta)\) 唯一吗？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>唯一</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>不唯一：\(\theta\) 可加 \(2\pi k\)；\((-\omega,-\theta)\) 也给出同一个 \(R\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>不唯一：\(\omega\) 的方向可以任取</label>
+        </div>
+        <div class="explain" data-for="3"></div>
+      </div>
+
+      <div class="score"><span class="big" id="scoreNum">0</span><span class="of">/ 3 · 答对即刻计入</span></div>
+    </div>
+  </section>

@@ -1,0 +1,295 @@
+<!-- ============ 02.0 引言 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.0</span><span class="t">引言<em>WHY FRAMES — 从质点到刚体</em></span></div>
+    <div class="prose">
+
+      <h3><span class="k">1</span>坐标不是点的属性</h3>
+      <p>同一个杯子，在桌上说“往东 30 厘米”，站在门口说“往北 2 米”，指的是同一个杯子。三个数全变了，杯子没动。<b>坐标是“相对谁量”的读数，不是物体自带的标签。</b>机器人学里绝大多数“算出来的结果和画面不一致”的困惑，追到底都是这一句没站稳。</p>
+      <p>所以本章的第一件事不是记公式，而是<b>把“相对谁”这件事本身变成一个可以参与计算的对象</b>——也就是坐标系。</p>
+
+      <h3><span class="k">2</span>质点三个数，刚体六个</h3>
+      <p>描述空间中的一个质点，坐标 \((x,y,z)\) 三个数就够：位置本身就是全部信息。</p>
+      <p>机器人的连杆不是质点，是<b>刚体</b>——它上面任意两点的距离永远不变。于是“它在哪”不再够用，还必须回答“它朝哪”。位置 3 个自由度，姿态 3 个自由度，一共 6 个。</p>
+      <p>这里要分清两件事：<b>自由刚体</b>在空间中有 6 个自由度；一条六关节机械臂的<b>位形空间</b>也是 6 维，但那 6 个是关节角，不是位置坐标。本章只解决前者的描述，第 04 课才把关节角和刚体位形接起来。</p>
+
+      <h3><span class="k">3</span>描述姿态的最小装置：两个坐标系</h3>
+      <p>一个固结在参考空间，记作 \(A\)（空间系）；一个固结在刚体上，记作 \(B\)（物体系），随刚体一起运动。</p>
+      <p>为什么必须是两个？一个坐标系只能给点标坐标，说不出“一根轴朝哪”——“朝哪”永远是相对另一根轴讲的。这也解释了后面所有记号为什么都带两个下标：\(R_{AB}\)、\(g_{AB}\)，第一个字母是参考系，第二个是被描述的那个。</p>
+      <p>于是<b>“\(B\) 相对 \(A\) 的关系”这一个数学对象，就完整携带了刚体的位置与姿态</b>。本章全部内容都长在这个对象上。</p>
+
+      <h3><span class="k">4</span>本章要造的三件东西</h3>
+      <p><b>只转不移</b>：旋转矩阵 \(R_{AB}\)（02.1）。<b>又转又移</b>：齐次变换 \(g_{AB}\)（02.2）。<b>反过来问</b>“\(A\) 相对 \(B\) 是什么”：\(g\) 的逆（02.2 内）。</p>
+      <p>这三件东西是整门课的地基：速度是 \(g\) 对时间求导，力用同一套矩阵搬运，第 04 课的正运动学是 \(g\) 的连乘，第 05 课的雅可比是它的微分。</p>
+
+      <h3><span class="k">5</span>前置知识，以及一个 30 秒自检</h3>
+      <p>需要四样：矩阵乘法、转置、逆、行列式；向量点积与叉积；\(\sin\)、\(\cos\) 的和角公式；特征值（03 课才用）。微积分只在 03.1 解一个最简单的常微分方程时出现。</p>
+      <p><b>自检</b>：能不能在纸上推出 \(\cos(\theta+90^\circ) = -\sin\theta\)？推不出来先补三角恒等式——02.1 的第一步就卡在这里。</p>
+
+      <h3><span class="k">6</span>这个页面怎么用</h3>
+      <p>每一节都是同一套节奏：<b>读一段 → 拖一次画布 → 对一眼右侧面板 → 做小测</b>。文字和面板是同一个对象的两面：文字说“应该是什么”，面板给“现在是多少”。</p>
+      <p>两者对不上，说明理解有偏差，回去重读那一段，而不是继续往下翻。段落带编号，就是为了让你能回头精确地找到它。</p>
+
+    </div>
+    <ul class="goals">
+
+      <li><span class="chk"></span><span>能不看书写出 \(R(\theta)\) 的两列，并解释第 1 列为什么是 \(x_B\) 的坐标</span></li>
+      <li><span class="chk"></span><span>能用“列是单位正交向量”推出 \(R^{-1}=R^{\mathsf{T}}\)，并说明 \(\det R\) 为什么不能是 \(-1\)</span></li>
+      <li><span class="chk"></span><span>能写出 \(g\) 与 \(g^{-1}\) 的块结构，并在 30 秒内完成 2024 Q1(a)</span></li>
+      <li><span class="chk"></span><span>小测 02.3 三题至少对两题——错题编号会汇入备考计划的错题记录</span></li>
+
+    </ul>
+  </section>
+
+  <!-- ============ 02.1 旋转矩阵 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.1</span><span class="t">旋转矩阵<em>ROTATION MATRIX</em></span></div>
+    <div class="prose">
+
+      <h3><span class="k">1</span>把两根箭头写成数</h3>
+      <p>设 \(B\) 相对 \(A\) 只转了一个角度 \(\theta\)，原点重合。<b>“\(B\) 的姿态”这句话翻译成数学，就是：\(B\) 的两根轴各自指向 \(A\) 里的哪个方向。</b></p>
+      <p>\(x_B\) 与 \(x_A\) 的夹角是 \(\theta\)，它的 \(A\) 坐标就是 \((\cos\theta,\ \sin\theta)\)，放进第 1 列；\(y_B\) 比 \(x_B\) 再转 \(90^\circ\)，坐标 \((\cos(\theta+90^\circ),\ \sin(\theta+90^\circ)) = (-\sin\theta,\ \cos\theta)\)，放进第 2 列：</p>
+      <div class="formula">\[ R_{AB} = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \]</div>
+      <p><b>矩阵的列就是坐标轴。</b>拖动红色手柄，右侧矩阵逐项联动——它不是抽象表格，就是那两根箭头的坐标。这句话是本节全部内容的钥匙。</p>
+
+      <h3><span class="k">2</span>为什么一定是“列”，不是“行”</h3>
+      <p>点 \(q\) 固结在刚体上。它在 \(B\) 中的坐标 \(q^{B}\) 不随运动改变，改变的是它在 \(A\) 中的坐标。同一个箭头，用两套基展开：</p>
+      <div class="formula">\[ q^{A} = q_1^{B}\,x_B + q_2^{B}\,y_B \]</div>
+      <p>把 \(x_B = (\cos\theta,\sin\theta)\)、\(y_B = (-\sin\theta,\cos\theta)\) 代进去，按 \(q_1^{B}\)、\(q_2^{B}\) 合并同类项：</p>
+      <div class="formula">\[ q^{A} = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \begin{bmatrix} q_1^{B} \\ q_2^{B} \end{bmatrix} = R_{AB}\,q^{B} \]</div>
+      <p>系数正好是那两根轴的坐标。<b>“列”不是约定，是被这个乘法逼出来的</b>：第 1 列如果写成别的东西，\(q^{A} = R\,q^{B}\) 立刻不成立。</p>
+
+      <h3><span class="k">3</span>同一个矩阵的两个身份（最容易混的地方）</h3>
+      <p><b>身份一，描述</b>：\(R_{AB}\) 记录 \(B\) 相对 \(A\) 转了多少。<b>身份二，换算</b>：\(R_{AB}\) 把 \(B\) 系的读数换成 \(A\) 系的读数。两个用途的数值完全相同、方向也一致，<b>不是互为逆的两个操作</b>。</p>
+      <p>互为逆的是 \(R_{BA} = R_{AB}^{\mathsf{T}}\)——它才是“\(A\) 相对 \(B\) 的姿态”，也是“把 \(A\) 系读数换成 \(B\) 系”的那个变换。</p>
+      <p>一个可靠的记忆钩子：<b>列 = \(B\) 的轴在 \(A\) 中；行 = \(A\) 的轴在 \(B\) 中。</b>用 \(\theta = 90^\circ\) 核对：\(R\) 的第 1 行是 \((0,-1)\)，而 \(A\) 的 \(x\) 轴在转了 \(90^\circ\) 的 \(B\) 系里确实指向 \(-y_B\)。</p>
+
+      <h3><span class="k">4</span>三条性质，来源都是“列是单位正交向量”</h3>
+      <p>两列长度都是 1，且互相垂直，于是 \(R^{\mathsf{T}}R = I\)。行列式只能是 \(\pm 1\)，而刚体运动不允许镜像（那会把左右手互换），所以取 \(+1\)：</p>
+      <div class="formula">\[ R^{\mathsf{T}}R = I, \qquad \det R = 1 \]</div>
+      <p>于是<b>逆等于转置</b>：\(R^{-1} = R^{\mathsf{T}}\)。二维三维都是零成本，而且数值上最稳——不用做除法，不会因为接近奇异而炸掉。这条在 03 课反解旋转时还会再用一次。</p>
+      <p>反过来也要记住：<b>任何</b>同时满足这两条的矩阵都是合法旋转。它们因此可以当验算工具，考试写完 \(R\) 花十秒查一遍，能挡住大部分符号错。</p>
+
+      <h3><span class="k">5</span>复合：下标接龙</h3>
+      <p>\(R_{AC} = R_{AB}R_{BC}\)。中间字母相同才能相乘：先把 \(C\) 系的读数换成 \(B\) 系，再把 \(B\) 系换成 \(A\) 系，两步连着做。<b>顺序不能交换</b>——一换，中间的 \(B\) 就接不上了。</p>
+      <p>三维里这不是空话。取 \(R_x(90^\circ)\)、\(R_y(90^\circ)\)，乘积 \(R_xR_y\) 的第 1 列是 \((0,1,0)\)，交换成 \(R_yR_x\) 后变成 \((0,0,-1)\)。<b>两次旋转的顺序，改变了结果。</b></p>
+      <p>二维是特例：所有平面旋转互相可交换（同轴）。这个巧合不要往外推——03.1 会给出一般结论：矩阵指数只有在可交换时才允许把指数相加。</p>
+
+      <h3><span class="k">6</span>手算一遍：\(\theta = 30^\circ\)</h3>
+      <p>取 \(q^{B} = (1,0)\)：这是 \(B\) 的 \(x\) 轴上一单位长的点，转 \(30^\circ\) 后应落在 \((\cos 30^\circ,\ \sin 30^\circ) = (0.866,\ 0.500)\)。用矩阵算：第一行 \(0.866 \times 1 + (-0.5)\times 0 = 0.866\)，第二行 \(0.5 \times 1 + 0.866 \times 0 = 0.5\)。对上了。</p>
+      <p>再取 \(q^{B} = (0,1)\)：结果是 \((-0.5,\ 0.866)\)，正好是第 2 列。<b>把两个基向量各算一次，等于把矩阵的两列各读了一次</b>——这是检查自己有没有算错的最快办法。</p>
+      <p>反查：\(q^{A} = (0,1)\)（\(A\) 的 \(y\) 轴）在 \(B\) 里是多少？用 \(R^{\mathsf{T}}\) 乘，得 \((0.5,\ 0.866)\)。这同时验证了上面的“行”规则：它就是 \(R\) 的第 2 行。</p>
+
+      <h3><span class="k">7</span>面板操作清单</h3>
+      <p><b>拖红色手柄</b>：\(\theta\) 变，两列一起转，第 1 列始终指向 \(x_B\)。<b>拖黑点 \(q\)</b>：\(q^{B}\) 变而 \(R\) 不动——刚体上的点在哪，和刚体朝哪，是两件互不干扰的事。</p>
+      <p><b>点“转到 90°”</b>：第 1 列变 \((0,1)\)、第 2 列变 \((-1,0)\)，\(R^{\mathsf{T}}R\) 仍是 \(I\)。<b>看算术流水</b>：面板把 \(R\,q^{B}\) 拆成逐项乘加，两个分量各占一行，手算卡住时对照这里找差异。</p>
+
+      <div class="box warn">
+        <div class="lbl">常见错误</div>
+        <ul>
+          <li>复合时把 \(R_{AB}\) 和 \(R_{BA}\) 用反。下标接不上就是错的，先查这个。</li>
+          <li>以为 \(\det R\) 可以是 \(-1\)。\(-1\) 是镜射，刚体做不到。</li>
+          <li>把“描述姿态”和“换算坐标”当成互为逆的两个操作。它们数值相同，都是 \(R_{AB}\)。</li>
+          <li>把方向的乘法写反成 \(R_{AB}\,q^{A} = q^{B}\)。正确的方向是 \(q^{A} = R_{AB}\,q^{B}\)。</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="lbl">离开本节前，合上文字回答</div>
+        <ul>
+          <li>\(R(90^\circ)\) 的两列各是什么？把画布转到 90° 核对。</li>
+          <li>\(\theta = 90^\circ\)、\(q^{B} = (1,0)\) 时 \(q^{A}\) 是多少？</li>
+          <li>为什么 \(\det R = 1\) 而不是 \(\pm 1\)？</li>
+          <li>\(R_{AB}\) 的第 2 行代表什么？</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>Frame B in Frame A</span><span class="hint">◎ 红色手柄 = 旋转　▪ 黑色原点 = 拖动点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim1">从零位形演示</button>
+          <button id="snap90">转到 90°</button>
+          <button id="snap180">转到 180°</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>当前旋转矩阵</span><span class="val" id="thetaOut">θ = 0°</span></div>
+          <div class="eq">
+            <span>\(R_{AB} = \)</span>
+            <span class="mathout" id="Rmat"></span>
+          </div>
+          <div class="legend">
+            <span class="l1"><i></i>第 1 列 = \(x_B\) 在 \(A\) 中的坐标</span>
+            <span class="l2"><i></i>第 2 列 = \(y_B\) 在 \(A\) 中的坐标</span>
+          </div>
+          <p class="note"><b>正交性</b>：\(R^{\mathsf{T}}R = I\)，\(\det R = 1\)（拖动时始终成立）。逆 = 转置：\(R^{-1} = R^{\mathsf{T}}\)。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>矩阵如何作用于点 · 算术流水</span><span class="val" id="qOut">qᴮ = ( 1.0, 0.6 )</span></div>
+          <div class="pipeline" id="pipe1"></div>
+          <p class="note">黑点 \(q\) 固结在刚体上。拖动它——它在 \(B\) 系里的坐标 \(q^{B}\) 改变；转动手柄——\(q^{B}\) 不变，只有 \(R\) 变。<b>这就是坐标变换的全部工作过程。</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02.2 刚体变换 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.2</span><span class="t">刚体变换 g<em>HOMOGENEOUS TRANSFORM</em></span></div>
+    <div class="prose">
+
+      <h3><span class="k">1</span>\(R\) 缺了半句话</h3>
+      <p>\(q^{A} = R\,q^{B}\) 成立的前提是：<b>\(B\) 的原点与 \(A\) 的原点重合</b>。真实机械臂上这个前提几乎从不成立——第二根连杆的坐标系原点，离第一根有好几十厘米。</p>
+      <p>拿数看一眼：\(\theta = 90^\circ\)，\(B\) 原点在 \(A\) 的 \((2,1)\)，\(q^{B} = (1,0)\)。\(R\,q^{B} = (0,1)\)，可真实的点在 \((2,2)\)——差了整整一个原点偏移。旋转没错，缺的是平移。</p>
+
+      <h3><span class="k">2</span>先转再移：仿射形式</h3>
+      <p>补上平移，最直接的形式是</p>
+      <div class="formula">\[ q^{A} = R_{AB}\,q^{B} + p_{AB} \]</div>
+      <p>\(p_{AB}\) 的定义要咬死：<b>\(B\) 的原点在 \(A\) 中的坐标</b>。它描述一个随刚体运动的点，不是“每次平移了多少”，也和 \(\theta\) 无关——\(B\) 原地转身，\(p\) 一动不动。</p>
+      <p>顺序同样不能倒：先 \(R\) 后加 \(p\)。写成 \(R(q^{B} + p)\) 就变成了“先在 \(B\) 系里挪一段，再整体转”，是另一个变换，结果也不同。</p>
+
+      <h3><span class="k">3</span>为什么必须升一维</h3>
+      <p>矩阵乘法是线性的：\(M(0)=0\)，\(M(ax+by)=aMx+bMy\)。而“加上 \(p\)”把原点挪走了，它不是线性映射，<b>\(2\times2\) 的矩阵装不下它</b>。</p>
+      <p>齐次坐标的办法：给点补一个 \(1\)，把 \(2\times2\) 扩成 \(3\times3\)：</p>
+      <div class="formula">\[ \begin{bmatrix} q^{A} \\ 1 \end{bmatrix} = \underbrace{\begin{bmatrix} R_{AB} & p_{AB} \\ 0 & 1 \end{bmatrix}}_{g_{AB}} \begin{bmatrix} q^{B} \\ 1 \end{bmatrix} \]</div>
+      <p>把乘法展开：前两行给出 \(R\,q^{B} + p\cdot 1\)，正是要的仿射式；底行给出 \(0\cdot q^{B} + 1\cdot 1 = 1\)，恒成立，意思是“补的那个 \(1\) 保持为 \(1\)”。<b>加法的位置，就是这样被 \(1\) 腾出来的。</b></p>
+      <p>三维把 \(2\times2\) 换成 \(3\times3\)、\(3\times3\) 换成 \(4\times4\)，结构一模一样。本页画布是二维，所以面板显示 \(3\times3\)。</p>
+
+      <h3><span class="k">4</span>齐次坐标顺手解决了另一件事</h3>
+      <p>方向向量（速度、力、轴）不该被平移影响。把补的那个数写成 \(0\)：</p>
+      <div class="formula">\[ g_{AB} \begin{bmatrix} v \\ 0 \end{bmatrix} = \begin{bmatrix} R_{AB}\,v \\ 0 \end{bmatrix} \]</div>
+      <p>只转不移。同一套 \(4\times4\) 矩阵因此能同时搬运“点”和“方向”，区别只在最后一个数是 \(1\) 还是 \(0\)。这个区分在后面会变成 twist 与 wrench 的区别——现在只要记住：<b>点是 \(1\)，方向是 \(0\)。</b></p>
+
+      <h3><span class="k">5</span>复合时 \(p\) 的公式是易错点</h3>
+      <p>把两个 \(g\) 按块乘开：</p>
+      <div class="formula">\[ \begin{bmatrix} R_{AB} & p_{AB} \\ 0 & 1 \end{bmatrix} \begin{bmatrix} R_{BC} & p_{BC} \\ 0 & 1 \end{bmatrix} = \begin{bmatrix} R_{AB}R_{BC} & R_{AB}\,p_{BC} + p_{AB} \\ 0 & 1 \end{bmatrix} \]</div>
+      <p>所以</p>
+      <div class="formula">\[ R_{AC} = R_{AB}R_{BC}, \qquad p_{AC} = R_{AB}\,p_{BC} + p_{AB} \]</div>
+      <p>位置块<b>不是</b> \(p_{AB} + p_{BC}\)。几何上很清楚：\(p_{BC}\) 是 \(C\) 原点在 \(B\) 系里的坐标，得先用 \(B\) 的朝向把它转到 \(A\) 的方向（乘 \(R_{AB}\)），才能和 \(B\) 原点在 \(A\) 的位置相加。</p>
+      <p>漏掉那个 \(R_{AB}\) 是最高频的复合错误，而且只在 \(R_{AB}=I\) 时才碰巧正确——所以对着一个“转过的”例子验一遍，就会暴露。</p>
+
+      <h3><span class="k">6</span>求逆：2024 Q1(a) 原题</h3>
+      <p>求 \(g^{-1}\) 不需要背公式，解方程就行。设 \(g^{-1}\) 的左上块为 \(A\)、右上块为 \(b\)，由 \(g\,g^{-1}=I\) 得到两个块方程：\(R\,A = I\) 与 \(R\,b + p = 0\)。于是 \(A = R^{\mathsf{T}}\)、\(b = -R^{\mathsf{T}}p\)：</p>
+      <div class="formula">\[ g_{AB}^{-1} = \begin{bmatrix} R_{AB}^{\mathsf{T}} & -R_{AB}^{\mathsf{T}}p_{AB} \\ 0 & 1 \end{bmatrix} \]</div>
+      <p>几何读法：\(-R^{\mathsf{T}}p\) 就是 <b>\(A\) 的原点在 \(B\) 中的坐标</b>。先算 \(R^{\mathsf{T}}p\)（把 \(p\) 转进 \(B\) 的方向），再取反（从 \(B\) 原点指回 \(A\) 原点）。</p>
+      <p><b>考场写法，三步</b>：左上写 \(R^{\mathsf{T}}\)；右上写 \(-R^{\mathsf{T}}p\)（转置、乘 \(p\)、添负号）；底行照抄零行加 1。不需要思考，但一定要用 \(g^{-1}g = I\) 或代一个点复核，符号错一眼就能看出来。</p>
+
+      <h3><span class="k">7</span>数值走一遍</h3>
+      <p>取 \(\theta = 90^\circ\)、\(p_{AB} = (2,1)\)、\(q^{B} = (1,0)\)。</p>
+      <p><b>正向</b>：\(R\,q^{B} = (0,1)\)，加 \(p\) 得 \(q^{A} = (2,2)\)。</p>
+      <p><b>逆向</b>：\(R^{\mathsf{T}}\) 的两行分别是 \((0,1)\) 与 \((-1,0)\)，所以 \(R^{\mathsf{T}}p = (1,-2)\)，取反得 \((-1,2)\)。核对：\(R^{\mathsf{T}}q^{A} + (-1,2) = (2,-2) + (-1,2) = (1,0)\)，回到 \(q^{B}\)。</p>
+
+      <h3><span class="k">8</span>面板怎么用，以及和考场的关系</h3>
+      <p><b>拖 \(B\) 原点（黑手柄）</b>：只有第 3 列在变，左上 \(2\times2\) 一动不动。<b>拖红色手柄</b>：只有左上块在变。\(g\) 的两块各管各的，这就是“打包”的含义。</p>
+      <p>下方流水实时算 \(-R^{\mathsf{T}}p\)，并核对 \(g^{-1}g = I\)。把它和自己手算的一行对照，就知道错在转置、乘法还是符号。</p>
+
+      <div class="box warn">
+        <div class="lbl">常见错误</div>
+        <ul>
+          <li>逆的位置块写成 \(-p\)（漏了 \(R^{\mathsf{T}}\)）。只有 \(\theta = 0\) 时才对。</li>
+          <li>复合的位置块写成 \(p_{AB} + p_{BC}\)。</li>
+          <li>把 \(p\) 当成“旋转中心”。\(p\) 是 \(B\) 的原点；旋转绕 \(B\) 原点发生，要绕别的点转得另构造一个 \(g\)。</li>
+          <li>三维里用 \(3\times3\) 的齐次矩阵乘三维点——少补了一个 \(1\)。</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="lbl">离开本节前，合上文字回答</div>
+        <ul>
+          <li>\(\theta = 180^\circ\)、\(p = (1,0)\) 时写出 \(g\) 与 \(g^{-1}\)，再用 \(q^{B} = (1,0)\) 验一遍。</li>
+          <li>为什么底行不能写成 \(0\ 0\ 2\)？</li>
+          <li>\(g_{AB}g_{BC}\) 的位置块里，\(p_{BC}\) 为什么必须乘 \(R_{AB}\)？</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv2" width="860" height="520"></canvas>
+          <div class="cap"><span>g = ( R , p )</span><span class="hint">◎ 旋转手柄　◎ B 原点 = 平移　▪ 点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim2">从零位形演示</button>
+          <button id="reset2">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>齐次变换矩阵 · 结构 → 实时数值</span><span class="val" id="gOut">g live</span></div>
+          <div class="eq">
+            <span>\(g_{AB} =\)</span>
+            <span class="mathout" id="Gmat"></span>
+          </div>
+          <p class="note">底行的 \(0\ 0\ 1\) 就是让加法自动发生的机关。拖原点时只有第 3 列变，转手柄时只有左上 \(2\times2\) 块变——\(g\) 的两块各管各的。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>求逆 · 2024 Q1(a) 原题</span><span class="val">g⁻¹ live</span></div>
+          <div class="eq">
+            <span>\(g_{AB}^{-1} =\)</span>
+            <span class="mathout" id="Ginv"></span>
+          </div>
+          <p class="note"><b>套路</b>：姿态块转置 \(R^{\mathsf{T}}\)，位置块换成 \(-R^{\mathsf{T}}p\)。考场按此三秒写出答案。下方面板验证 \(g^{-1}g = I\) 恒成立。</p>
+          <div class="pipeline" id="pipe2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02.3 小测 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.3</span><span class="t">小测<em>CHECK</em></span></div>
+    <div class="prose">
+      <p><b>规则。</b>三道题，做完即时反馈。答错不算失败——错题会告诉我们明天从哪里开始。做题时可以用上方画布：把 02.1 转到对应角度，右侧矩阵就是答案的对照。</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q" data-q="1">
+        <div class="qhead"><span class="qn">Q1</span><span class="qt">拖动手柄使 \(\theta = 90^\circ\)。此时旋转矩阵 \(R_{AB}\) 是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            \(\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            \(\begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            \(\begin{bmatrix} 0 & 1 \\ -1 & 0 \end{bmatrix}\)</label>
+        </div>
+        <div class="explain" data-for="1"></div>
+      </div>
+
+      <div class="q" data-q="2">
+        <div class="qhead"><span class="qn">Q2</span><span class="qt">点 \(q\) 在 \(B\) 系下坐标为 \((1,0)\)。当 \(\theta = 180^\circ\) 且 \(p_{AB} = (2,0)\) 时，\(q\) 在 \(A\) 系下的坐标是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\((3, 0)\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\((1, 0)\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\((-1, 0)\)</label>
+        </div>
+        <div class="explain" data-for="2"></div>
+      </div>
+
+      <div class="q" data-q="3">
+        <div class="qhead"><span class="qn">Q3</span><span class="qt">齐次变换 \(g\) 的逆 \(g^{-1}\) 是？（2024 Q1(a) 考点）</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            \(\begin{bmatrix} R^{\mathsf{T}} & -R^{\mathsf{T}}p \\ 0 & 1 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            \(\begin{bmatrix} R^{\mathsf{T}} & -p \\ 0 & 1 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            \(\begin{bmatrix} R & -R^{\mathsf{T}}p \\ 0 & 1 \end{bmatrix}\)</label>
+        </div>
+        <div class="explain" data-for="3"></div>
+      </div>
+
+      <div class="score"><span class="big" id="scoreNum">0</span><span class="of">/ 3 · 答对即刻计入</span></div>
+    </div>
+  </section>

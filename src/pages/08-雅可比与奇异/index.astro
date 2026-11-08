@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import meta from '../../data/meta.json';
+import { neighbours } from '../../data/chapters.js';
+import Content from '../../content/08.mdx';
+
+const m = meta['08'];
+const { prev, next } = neighbours('08-雅可比与奇异');
+---
+
+<Base
+  kicker={m.kicker}
+  title={m.title}
+  en={m.en}
+  meta={m.meta}
+  prev={prev}
+  next={next}
+  footerNote="Patchouli · 大图书馆课件工坊 · 08 课 · 2026-11"
+>
+  <Content />
+</Base>
+
+<script>
+  import '../../scripts/ch08.js';
+</script>

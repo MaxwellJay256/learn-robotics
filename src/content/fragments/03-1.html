@@ -1,0 +1,26 @@
+<div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>ω = ẑ 的平面特例</span><span class="hint">◎ 红色手柄 = 扫转角 θ</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="snap601">转到 60°</button>
+          <button id="snap901">转到 90°</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>幂级数逐项求和 · 收敛过程</span><span class="val" id="thetaOut1">θ = 0°</span></div>
+          <div id="series"></div>
+          <p class="note">\(S_k = I + \hat{\omega}\theta + \frac{(\hat{\omega}\theta)^2}{2!} + \dots + \frac{(\hat{\omega}\theta)^k}{k!}\)，误差取 \(\max|S_k - R|\)。<b>\(k=5\) 时误差已小到肉眼不可见</b>——而 Rodrigues 给出的是精确和。</p>
+        </div>
+        <div class="pblock">
+          <div class="plabel"><span>三项式闭合 · 数值验证</span><span class="val" id="detOut">det = 1</span></div>
+          <div class="pipeline" id="pipe1"></div>
+          <p class="note">左：\(\hat{\omega}\)（由 \(\omega = \hat{z}\) 写出，注意 \(\hat{\omega}^{3} = -\hat{\omega}\)）；中：三个系数矩阵的现值；右：精确 \(R\)。<b>三项相加就是级数的无穷项和</b>——这就是坍缩的含义。</p>
+        </div>
+      </div>
+    </div>

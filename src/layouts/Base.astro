@@ -1,0 +1,55 @@
+---
+const {
+  kicker = '机器人学导论 · 交互式学习平台',
+  title,
+  en = '',
+  meta = [],
+  prev = null,
+  next = null,
+  footerNote = 'Patchouli · 大图书馆课件工坊 · 2026-11',
+  home = false,
+} = Astro.props;
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — 机器人学导论 · 交互式学习平台</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href={`${base}/katex/katex.min.css`} />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div class="kicker"><span class="sq"></span>{kicker}</div>
+        <h1>
+          {title}{en && <span class="en">{en}</span>}
+        </h1>
+        <div class="meta">
+          {meta.map((m) => <span><Fragment set:html={m} /></span>)}
+        </div>
+      </header>
+
+      <slot />
+
+      <footer>
+        <span>{footerNote}</span>
+        {!home && (
+          <span class="fnav">
+            <a href={`${base}/`}>目录</a>
+            {prev && <a href={`${base}/${prev.slug}/`}>← 上一节：{prev.title}</a>}
+            {next && <a class="next" href={`${base}/${next.slug}/`}>下一节：{next.title} →</a>}
+          </span>
+        )}
+      </footer>
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  @import '../styles/site.css';
+</style>

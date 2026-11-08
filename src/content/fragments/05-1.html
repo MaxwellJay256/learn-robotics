@@ -1,0 +1,40 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv1" width="860" height="470"></canvas>
+      <div class="cap"><span>两自由度臂 · 同一个运动的两份读数</span><span class="hint">Ctrl+拖 = 平移　红箭头 = 空间速度　灰箭头 = 物体速度（已转回空间方向）</span></div>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">θ₁</span>
+      <input class="range" id="t1" type="range" min="-170" max="170" step="1" value="30">
+      <b class="val" id="t1v">30°</b>
+      <span class="tlabel">θ₂</span>
+      <input class="range" id="t2" type="range" min="-170" max="170" step="1" value="45">
+      <b class="val" id="t2v">45°</b>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">dθ₁/dt</span>
+      <input class="range" id="w1" type="range" min="-2" max="2" step="0.05" value="1">
+      <b class="val" id="w1v">1.00</b>
+      <span class="tlabel">dθ₂/dt</span>
+      <input class="range" id="w2" type="range" min="-2" max="2" step="0.05" value="0.5">
+      <b class="val" id="w2v">0.50</b>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>空间速度 V_s</span><span class="val" id="vsOut">(v, ω)</span></div>
+      <div class="eq"><span class="mathout" id="Vs"></span></div>
+      <p class="note">红箭头。$v_s$ 是<b>瞬时与空间系原点重合的那一点</b>的速度，不是末端的速度 $\dot p$。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>物体速度 V_b</span><span class="val" id="vbOut">(v, ω)</span></div>
+      <div class="eq"><span class="mathout" id="Vb"></span></div>
+      <p class="note">灰箭头（已用 $R$ 转回空间方向画出来）。$v_b=R^{\mathsf T}\dot p$ 是同一个速度在物体系里的读数。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>换算校验</span><span class="val" id="chkOut">Ad</span></div>
+      <p class="note" id="chk">—</p>
+    </div>
+  </div>
+</div>

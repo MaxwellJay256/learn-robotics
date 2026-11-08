@@ -1,0 +1,35 @@
+<div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>Frame B in Frame A</span><span class="hint">◎ 红色手柄 = 旋转　▪ 黑色原点 = 拖动点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim1">从零位形演示</button>
+          <button id="snap90">转到 90°</button>
+          <button id="snap180">转到 180°</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>当前旋转矩阵</span><span class="val" id="thetaOut">θ = 0°</span></div>
+          <div class="eq">
+            <span>\(R_{AB} = \)</span>
+            <span class="mathout" id="Rmat"></span>
+          </div>
+          <div class="legend">
+            <span class="l1"><i></i>第 1 列 = \(x_B\) 在 \(A\) 中的坐标</span>
+            <span class="l2"><i></i>第 2 列 = \(y_B\) 在 \(A\) 中的坐标</span>
+          </div>
+          <p class="note"><b>正交性</b>：\(R^{\mathsf{T}}R = I\)，\(\det R = 1\)（拖动时始终成立）。逆 = 转置：\(R^{-1} = R^{\mathsf{T}}\)。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>矩阵如何作用于点 · 算术流水</span><span class="val" id="qOut">qᴮ = ( 1.0, 0.6 )</span></div>
+          <div class="pipeline" id="pipe1"></div>
+          <p class="note">黑点 \(q\) 固结在刚体上。拖动它——它在 \(B\) 系里的坐标 \(q^{B}\) 改变；转动手柄——\(q^{B}\) 不变，只有 \(R\) 变。<b>这就是坐标变换的全部工作过程。</b></p>
+        </div>
+      </div>
+    </div>

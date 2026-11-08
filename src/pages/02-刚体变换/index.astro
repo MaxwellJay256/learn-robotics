@@ -1,0 +1,17 @@
+---
+import Base from '../../layouts/Base.astro';
+import meta from '../../data/meta.json';
+import { neighbours } from '../../data/chapters.js';
+import Content from '../../content/02.mdx';
+
+const m = meta['02'];
+const { prev, next } = neighbours('02-刚体变换');
+---
+
+<Base kicker={m.kicker} title={m.title} en={m.en} meta={m.meta} prev={prev} next={next}>
+  <Content />
+</Base>
+
+<script>
+  import '../../scripts/ch02.js';
+</script>

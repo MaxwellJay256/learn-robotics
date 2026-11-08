@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器人学导论 · 02 刚体变换 — 交互式学习平台</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="kicker"><span class="sq"></span>机器人学导论 · 交互式学习平台</div>
+    <h1>02 刚体变换<span class="en">Rigid-Body Transformations — 旋转 · 平移 · 齐次坐标</span></h1>
+    <div class="meta">
+      <span><b>知识清单</b>　K00a–K02</span>
+      <span><b>考试对应</b>　2024 Q1(a)(b)</span>
+      <span><b>体系</b>　李泽湘 / MLS 第 2 章</span>
+    </div>
+  </header>
+
+  <!-- ============ 02.0 引言 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.0</span><span class="t">引言<em>WHY FRAMES — 从质点到刚体</em></span></div>
+    <div class="prose">
+      <p><b>质点只要三个数。</b>描述空间中一个质点，坐标 \((x,y,z)\) 就足够。机器人连杆是<b>刚体</b>：它上面任意两点的距离永远不变。于是「它在哪」不再够用——还必须回答<b>「它朝哪」</b>。位置三个自由度，姿态三个自由度，一共六个。</p>
+      <p><b>手段：装两个坐标系。</b>一个固结在参考空间，记作 \(A\)（空间系）；一个固结在刚体上，记作 \(B\)（物体系），随刚体一起运动。此后<b>「\(B\) 相对 \(A\) 的关系」这一个数学对象，就完整携带了刚体的位置与姿态</b>——本章全部内容都长在这个对象上。</p>
+      <p><b>本章只做三件事。</b>\(B\) 相对 \(A\) 只转了 → 旋转矩阵 \(R\)（02.1）；\(B\) 又转又移 → 齐次变换 \(g\)（02.2）；反过来问 \(A\) 相对 \(B\) → \(g\) 的逆（02.2 内）。速度、力，以及整门课的指数积正运动学，全部以这两个对象为地基。</p>
+    </div>
+    <ul class="goals">
+      <li><span class="chk"></span><span>学完 02.1 能说出：<b>\(R\) 的每一列是什么</b>，并解释为什么 \(R^{-1}=R^{\mathsf{T}}\)</span></li>
+      <li><span class="chk"></span><span>学完 02.2 能写出：<b>\(g\) 的结构</b>，并推出
+        \[ g^{-1} = \begin{bmatrix} R^{\mathsf{T}} & -R^{\mathsf{T}}p \\ 0 & 1 \end{bmatrix} \]</span></li>
+      <li><span class="chk"></span><span>小测 02.3 三题至少对两题——错题编号会汇入备考计划的错题记录</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 02.1 旋转矩阵 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.1</span><span class="t">旋转矩阵<em>ROTATION MATRIX</em></span></div>
+    <div class="prose">
+      <p><b>装两个坐标系。</b>\(A\) 固结在地面（空间系，黑色轴 \(x_A\)、\(y_A\)），\(B\) 固结在刚体上（物体系，红色 \(x_B\)、灰色 \(y_B\)）。此后「刚体的姿态」这句话翻译成数学就是：<b>\(B\) 的两根轴各自指向 \(A\) 中的哪个方向</b>。</p>
+      <p><b>把姿态写成矩阵。</b>\(x_B\) 在 \(A\) 中的坐标是 \((\cos\theta,\ \sin\theta)\)，放进第 1 列；\(y_B\) 的坐标 \((-\sin\theta,\ \cos\theta)\) 放进第 2 列：</p>
+      <div class="formula">\[ R_{AB} = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \]</div>
+      <p>拖动红色手柄，右侧矩阵逐项联动——<b>矩阵不是抽象表格，它就是那两根箭头的坐标</b>。</p>
+      <p><b>它同时是坐标变换。</b>点 \(q\) 固结在刚体上：它在 \(B\) 中的坐标 \(q^{B}\) 不随运动改变，改变的是它在 \(A\) 中的坐标。同一个箭头既可以写成「\(B\) 的基向量 × \(q^{B}\)」，也可以写成「\(A\) 的基向量 × \(q^{A}\)」——两边说的是同一个向量，对照系数即得 \(q^{A} = R_{AB}\,q^{B}\)。下方算术流水把这个乘法拆到每一次乘法与加法。</p>
+      <p><b>三条性质，考题源头。</b>列是正交单位向量，所以 \(R^{\mathsf{T}}R = I\) 且 \(\det R = 1\)（刚体运动不许出现镜像）；于是<b>逆 = 转置</b>，二维求逆零成本。复合则首尾相接：\(R_{AC} = R_{AB}R_{BC}\)，下标必须接得上才能相乘，顺序不可交换。</p>
+      <p><b>操作。</b>拖红色手柄旋转；拖黑点 \(q\) 改变它的物体系坐标；点「转到 90°」后核对第 1 列变成 \((0,1)\)。</p>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>Frame B in Frame A</span><span class="hint">◎ 红色手柄 = 旋转　▪ 黑色原点 = 拖动点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim1">从零位形演示</button>
+          <button id="snap90">转到 90°</button>
+          <button id="snap180">转到 180°</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>当前旋转矩阵</span><span class="val" id="thetaOut">θ = 0°</span></div>
+          <div class="eq">
+            <span>\(R_{AB} = \)</span>
+            <span class="mathout" id="Rmat"></span>
+          </div>
+          <div class="legend">
+            <span class="l1"><i></i>第 1 列 = \(x_B\) 在 \(A\) 中的坐标</span>
+            <span class="l2"><i></i>第 2 列 = \(y_B\) 在 \(A\) 中的坐标</span>
+          </div>
+          <p class="note"><b>正交性</b>：\(R^{\mathsf{T}}R = I\)，\(\det R = 1\)（拖动时始终成立）。逆 = 转置：\(R^{-1} = R^{\mathsf{T}}\)。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>矩阵如何作用于点 · 算术流水</span><span class="val" id="qOut">qᴮ = ( 1.0, 0.6 )</span></div>
+          <div class="pipeline" id="pipe1"></div>
+          <p class="note">黑点 \(q\) 固结在刚体上。拖动它——它在 \(B\) 系里的坐标 \(q^{B}\) 改变；转动手柄——\(q^{B}\) 不变，只有 \(R\) 变。<b>这就是坐标变换的全部工作过程。</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02.2 刚体变换 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.2</span><span class="t">刚体变换 g<em>HOMOGENEOUS TRANSFORM</em></span></div>
+    <div class="prose">
+      <p><b>\(R\) 有个隐藏前提。</b>\(q^{A} = R\,q^{B}\) 只在 \(B\) 的原点与 \(A\) 的原点<b>重合</b>时成立。机械臂各连杆的坐标系原点散布在空间各处，这个前提几乎从不满足。</p>
+      <p><b>修补：先转再移。</b>让刚体先随 \(B\) 旋转，再把 \(B\) 的原点平移到 \(p_{AB}\)（\(B\) 原点在 \(A\) 中的位置）：\(q^{A} = R\,q^{B} + p_{AB}\)。位置与姿态，一个式子同时携带。</p>
+      <p><b>齐次坐标的机关。</b>矩阵乘法里没有「加法」的位置——于是把点升一维，让底行的 \(0\ 0\ 1\) 负责「乘 1」，让加法自动发生：</p>
+      <div class="formula">\[ \begin{bmatrix} q^{A} \\ 1 \end{bmatrix} = \underbrace{\begin{bmatrix} R_{AB} & p_{AB} \\ 0 & 1 \end{bmatrix}}_{g_{AB}} \begin{bmatrix} q^{B} \\ 1 \end{bmatrix} \]</div>
+      <p>看懂底行，齐次变换就不再神秘：它只是一次普通的矩阵乘法。</p>
+      <p><b>复合自然成立。</b>\(g_{AC} = g_{AB}\,g_{BC}\)，与 \(R\) 的复合同构。记住这个连乘的样子——下一节指数积公式的连乘，就是它的连续版。</p>
+      <p><b>求逆 = 2024 Q1(a) 原题。</b>\(g^{-1}\) 描述 \(A\) 相对 \(B\)：姿态部分取逆得 \(R^{\mathsf{T}}\)；\(A\) 原点在 \(B\) 中的位置，先用 \(R^{\mathsf{T}}\) 把 \(p_{AB}\) 转到 \(B\) 的方向再取反，得 \(-R^{\mathsf{T}}p\)：</p>
+      <div class="formula">\[ g_{AB}^{-1} = \begin{bmatrix} R_{AB}^{\mathsf{T}} & -R_{AB}^{\mathsf{T}}p_{AB} \\ 0 & 1 \end{bmatrix} \]</div>
+      <p>右侧面板实时验证。拖 \(B\) 原点平移——只有第 3 列动；拖红色手柄旋转——只有左上 \(2\times2\) 块动。\(g\) 的两块各管各的，这就是「打包」的含义。</p>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv2" width="860" height="520"></canvas>
+          <div class="cap"><span>g = ( R , p )</span><span class="hint">◎ 旋转手柄　◎ B 原点 = 平移　▪ 点 q</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim2">从零位形演示</button>
+          <button id="reset2">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>齐次变换矩阵 · 结构 → 实时数值</span><span class="val" id="gOut">g live</span></div>
+          <div class="eq">
+            <span>\(g_{AB} =\)</span>
+            <span class="mathout" id="Gmat"></span>
+          </div>
+          <p class="note">底行的 \(0\ 0\ 1\) 就是让加法自动发生的机关。拖原点时只有第 3 列变，转手柄时只有左上 \(2\times2\) 块变——\(g\) 的两块各管各的。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>求逆 · 2024 Q1(a) 原题</span><span class="val">g⁻¹ live</span></div>
+          <div class="eq">
+            <span>\(g_{AB}^{-1} =\)</span>
+            <span class="mathout" id="Ginv"></span>
+          </div>
+          <p class="note"><b>套路</b>：姿态块转置 \(R^{\mathsf{T}}\)，位置块换成 \(-R^{\mathsf{T}}p\)。考场按此三秒写出答案。下方面板验证 \(g^{-1}g = I\) 恒成立。</p>
+          <div class="pipeline" id="pipe2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02.3 小测 ============ -->
+  <section>
+    <div class="secno"><span class="n">02.3</span><span class="t">小测<em>CHECK</em></span></div>
+    <div class="prose">
+      <p><b>规则。</b>三道题，做完即时反馈。答错不算失败——错题会告诉我们明天从哪里开始。做题时可以用上方画布：把 02.1 转到对应角度，右侧矩阵就是答案的对照。</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q" data-q="1">
+        <div class="qhead"><span class="qn">Q1</span><span class="qt">拖动手柄使 \(\theta = 90^\circ\)。此时旋转矩阵 \(R_{AB}\) 是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            \(\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            \(\begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>
+            \(\begin{bmatrix} 0 & 1 \\ -1 & 0 \end{bmatrix}\)</label>
+        </div>
+        <div class="explain" data-for="1"></div>
+      </div>
+
+      <div class="q" data-q="2">
+        <div class="qhead"><span class="qn">Q2</span><span class="qt">点 \(q\) 在 \(B\) 系下坐标为 \((1,0)\)。当 \(\theta = 180^\circ\) 且 \(p_{AB} = (2,0)\) 时，\(q\) 在 \(A\) 系下的坐标是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\((3, 0)\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\((1, 0)\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\((-1, 0)\)</label>
+        </div>
+        <div class="explain" data-for="2"></div>
+      </div>
+
+      <div class="q" data-q="3">
+        <div class="qhead"><span class="qn">Q3</span><span class="qt">齐次变换 \(g\) 的逆 \(g^{-1}\) 是？（2024 Q1(a) 考点）</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            \(\begin{bmatrix} R^{\mathsf{T}} & -R^{\mathsf{T}}p \\ 0 & 1 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            \(\begin{bmatrix} R^{\mathsf{T}} & -p \\ 0 & 1 \end{bmatrix}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>
+            \(\begin{bmatrix} R & -R^{\mathsf{T}}p \\ 0 & 1 \end{bmatrix}\)</label>
+        </div>
+        <div class="explain" data-for="3"></div>
+      </div>
+
+      <div class="score"><span class="big" id="scoreNum">0</span><span class="of">/ 3 · 答对即刻计入</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Patchouli · 大图书馆课件工坊 · v4 · 2026-11</span>
+    <a class="next" href="../03-指数坐标与Rodrigues/index.html">下一节：指数坐标与 Rodrigues →</a>
+  </footer>
+</div>
+
+<script src="../assets/katex/katex.min.js"></script>
+<script src="../assets/katex/contrib/auto-render.min.js"></script>
+<script src="../assets/core.js"></script>
+<script src="../assets/02.js"></script>
+</body>
+</html>

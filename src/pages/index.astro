@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import { chapters } from '../data/chapters.js';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base
+  home
+  title="自学站"
+  en="Robotics · 从刚体变换到轨迹规划"
+  meta={[
+    '<b>知识清单</b>　K00a–K09（M1–M4）',
+    '<b>考试</b>　2026-11-11',
+    '<b>体系</b>　李泽湘 / MLS',
+  ]}
+>
+  <section>
+    <div class="secno"><span class="n">00</span><span class="t">怎么用<em>HOW TO READ</em></span></div>
+    <div class="prose">
+      <p><b>每节的结构都一样。</b>正文按小标题与编号段落推进，讲到能算的地方就给一块画布：左边拖动，右边实时出矩阵。正文里的公式与面板里的数字是同一件事的两个视角，对不上就说明哪一步没懂。</p>
+      <p><b>每节末尾三道题。</b>做题时可以直接拖上方面板核对，答错会告诉你错在哪、回正文哪一小节看。小测不记分，只用来找漏洞。</p>
+      <p><b>离线可用。</b>公式与字体都随站点一起构建，<code>npm run preview</code> 或把 <code>dist/</code> 放到任意静态服务器即可读。页脚有「目录」可以回来。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="secno"><span class="n">01</span><span class="t">目录<em>CONTENTS</em></span></div>
+    <nav class="toc">
+      {chapters.map((c) =>
+        c.status === 'done' ? (
+          <a class="row" href={`${base}/${c.slug}/`}>
+            <span class="no">{c.no}</span>
+            <span class="t">{c.title}<span class="kw">{c.kw}　{c.reg}</span></span>
+            <span class="st done">已完成</span>
+          </a>
+        ) : (
+          <div class="row todo">
+            <span class="no">{c.no}</span>
+            <span class="t">{c.title}<span class="kw">{c.kw}　{c.reg}</span></span>
+            <span class="st">待写</span>
+          </div>
+        )
+      )}
+    </nav>
+  </section>
+</Base>

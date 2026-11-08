@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base
+  title="页面不存在"
+  en="404 · NOT FOUND"
+  meta={['<b>状态</b>　这一节还没写，或者链接打错了']}
+>
+  <section>
+    <div class="prose">
+      <p><b>这个地址没有对应的页面。</b>可能是章节编号或结尾斜杠写错了；目录里能点进去的是已经写完的 02 到 08，其余几节还标着「待写」，直接输网址同样会落到这里。</p>
+      <p><a href={`${base}/`}>回到目录</a></p>
+    </div>
+  </section>
+</Base>

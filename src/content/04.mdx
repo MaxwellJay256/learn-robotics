@@ -1,0 +1,244 @@
+import Section from '../components/Section.astro';
+import Prose from '../components/Prose.astro';
+import Box from '../components/Box.astro';
+import Raw from '../components/Raw.astro';
+import w04_d1 from './fragments/04-d1.html?raw';
+import w04_d2 from './fragments/04-d2.html?raw';
+import w04_1 from './fragments/04-1.html?raw';
+import w04_2 from './fragments/04-2.html?raw';
+
+<Section n="04.0" t="引言" en="WHY SCREW">
+
+<Prose>
+
+### <span className="k">1</span> 前两节留下的同一个空缺
+
+02 的 $g$ 和 03 的 $R$ 有一个共同点：它们描述的都是到位之后的样子。给一个 $R$，你说不出它是怎么转过来的；给一个 $g$，你说不出末端走的是直线还是弧线。
+
+可机械臂不是瞬移的。关节从 $0$ 转到 $\theta$，末端的轨迹是一条连续曲线。要描述“过程”，就得把 03 的 $(\omega,\theta)$ 从“转动”推广到“整个刚体的位移”——这就是本课要造的螺旋。
+
+### <span className="k">2</span> 一条定理把转动和移动统一起来
+
+Chasles 定理：任何刚体位移都可以分解成绕某一根轴的转动加上沿这根轴的平移——一次拧螺丝。轴、转角 $\theta$、沿轴位移 $d$ 三个量就够，比 $g$ 里那些数少得多，而且每个都能在图上指出来。
+
+二维里它退化成“绕某点转”，三维才是真正的螺旋：转的同时还在沿轴前进，每个点的轨迹是一条螺旋线。本课全在三维。
+
+### <span className="k">3</span> 本课两件事
+
+第一件：把这条螺旋写成六个数 $\xi = (v,\omega)$，叫旋量（twist）。第二件：把 $\xi$ 塞进一个 $4\times4$ 的反对称矩阵 $\hat\xi$，取指数 $e^{\hat\xi\theta}$，一次算出整段位移。
+
+它和 03 是同一个故事多了一维：03 的 $\hat\omega$ 是 $3\times3$，这里的 $\hat\xi$ 是 $4\times4$；03 的 Rodrigues 三项式在这里变成“一块 $3\times3$ 加一列平移”。
+
+下一节讲正运动学时，把一串 $e^{\hat\xi_i\theta_i}$ 连乘起来就是整条机械臂——所谓指数积，乘的就是本课造的这个东西。所以这一节看着抽象，其实是后面所有内容的零件车间。
+
+### <span className="k">4</span> 前置，三样就够
+
+03 的 Rodrigues 与 hat 算子（含 $\hat\omega^{3} = -\hat\omega$ 那条链）；02 的 $g$ 与齐次坐标（点是 1，方向是 0）；再加一个三维直觉：绕轴转动时，点的速度同时垂直于轴和半径。
+
+不需要新的数学工具。指数的定义、分块矩阵的乘法、叉积——全是前三节用过的东西，只是尺寸大了一号。
+
+</Prose>
+
+<ul className="goals">
+
+  <li><span className="chk"></span><span>能从“绕轴的圆周速度 + 沿轴的速度”写出 $\dot q = \hat\omega q + v$，并说清 $v$ 为什么不是轴的位置</span></li>
+  <li><span className="chk"></span><span>给一根轴（位置、方向、螺距），三十秒内写出旋量 $\xi$，并反算回 $h$ 与轴位置</span></li>
+  <li><span className="chk"></span><span>能写出 $\hat\xi$ 与 $e^{\hat\xi\theta}$ 的分块形式，并说清 $\omega = 0$ 时它退化成什么</span></li>
+  <li><span className="chk"></span><span>小测 04.3 三题至少对两题</span></li>
+
+</ul>
+
+</Section>
+
+<Section n="04.1" t="螺旋轴与旋量" en="SCREW AXIS · TWIST">
+
+<Prose>
+
+### <span className="k">1</span> 纯转动时，每个点画一个圆
+
+轴固定、刚体绕它转：每个点到轴的距离不变，所以它在垂直于轴的平面里画圆，圆心是它在轴上的投影。轴上的点原地不动——它们速度为零，这是“轴”这个字的全部含义。
+
+一旦加上沿轴的平移，圆的圆心开始沿轴匀速移动，圆被拉成螺旋线。拧螺丝就是这个动作：转一圈前进一个螺距。
+
+### <span className="k">2</span> 速度场：一个式子管住所有点
+
+设轴过点 $r$、方向为单位向量 $\omega$、螺距为 $h$（每转 $1$ 弧度沿轴前进 $h$）。任意点 $q$ 的速度由两块叠成——绕轴的圆周切向，加上沿轴的那一份：
+
+```math
+\dot q = \omega\times(q-r) + h\,\omega
+```
+
+第一项垂直于 $\omega$、也垂直于 $q-r$，是圆周速度；第二项沿轴。两块互相垂直，所以速度大小是两者平方和开根。
+
+</Prose>
+
+<Raw html={w04_d1} />
+
+<Prose>
+
+把括号拆开，会掉出一个和 $p$ 无关的常向量：
+
+```math
+\dot q = \omega\times q + \underbrace{(h\,\omega - \omega\times r)}_{v}
+```
+
+于是速度场是 $q$ 的线性函数：$\dot q = \omega\times q + v$。
+这意味着螺旋移动的速度向量是关于 $q$ 的线性函数，才写得出矩阵乘法——这是下一节能取指数的全部前提。
+
+### <span className="k">3</span> 旋量：把六个数打包
+
+定义 $\xi = (v,\omega)\in\mathbb{R}^{6}$。顺序是 $(v,\omega)$，平移在前、转轴在后——这是 MLS 的约定，考试按教材写，别和 $(\omega,v)$ 混。顺序一换，后面每一个矩阵都要重排。
+
+两个分量各自的读法：$\omega$ 是转轴方向，长度取 $1$（角速度大小另算）；$v$ 是原点的速度——把 $q=0$ 代进 $\dot q = \omega\times q + v$，右边只剩 $v$。
+
+这里有个高频误解：$v$ 不是轴的位置。轴的位置是几何量，$v$ 是速度量；换个原点，$v$ 就变。它实际是“转轴不过原点所欠下的那笔平移”。
+
+### <span className="k">4</span> 从 $\xi$ 反读螺距与轴
+
+把 $v$ 沿轴分解：$v = h\,\omega + (-\omega\times r)$。前一项平行于轴，后一项垂直于轴——两边点乘 $\omega$，垂直项消失：
+
+```math
+h = \omega^{\mathsf{T}}v \qquad (|\omega| = 1)
+```
+
+轴的位置则藏在垂直项里。取 $\omega\times v$：由 $v = h\omega - \omega\times r$ 得 $\omega\times v = r - \omega(\omega^{\mathsf{T}}r)$，正好是 $r$ 垂直于轴的那一部分——也就是轴上离原点最近的那个点。所以
+
+```math
+r_{\perp} = \omega\times v
+```
+
+走一遍数：轴过 $(2,0,0)$、方向 $\hat z$、螺距 $0$。原点在轴的 $-x$ 侧，绕 $+z$ 转时它的速度指向 $-y$：$v = -\omega\times r = (0,-2,0)$。反算 $h = \omega^{\mathsf T}v = 0$，$\omega\times v = (2,0,0)$，回到轴上那个点。
+
+### <span className="k">5</span> 三个退化情形，考试最爱考
+
+$h=0$：纯转动。注意轴仍可以不过原点——这时 $v = -\omega\times r \neq 0$，只有 $r=0$ 才是 $v=0$。
+
+$\omega=0$：纯平移。没有转轴，$v$ 就是平移方向（取单位向量时，$\theta$ 就是走过的距离）。
+
+$r=0$：轴过原点，此时 $v = h\omega$，与 $\omega$ 平行，两种分量合成一条沿轴的直线运动。
+
+<Box warn title="常见错误">
+
+- 把旋量写成 $(\omega,v)$。顺序反了，$\hat\xi$ 的分块位置跟着错，一取指数就得出个歪掉的变换。
+- 把 $v$ 当成“轴的坐标”。最典型的后果：看到 $h=0$、$v\neq0$，误判成“轴过原点”。
+- 算 $h=\omega^{\mathsf T}v$ 之前没把 $\omega$ 单位化。$h$ 会差一个 $|\omega|^{2}$。
+- 以为圆周分量和沿轴分量会互相干扰。它们正交，可以分开算、分开验。
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- $\omega = \hat z$、轴过 $(0,2,0)$、$h=0$，写出 $\xi$。
+- $\xi=(v,\omega)$ 满足 $h=0$ 但 $v\neq0$，几何上是什么意思？
+- $\omega=0$ 时，速度场 $\dot q = \omega\times q + v$ 变成什么？
+</Box>
+
+</Prose>
+
+</Section>
+
+<Section n="04.2" t="齐次变换的指数" en="FROM TWIST TO MATRIX">
+
+<Prose>
+
+### <span className="k">1</span> 与 03 完全平行的构造
+
+03 是 $\dot q = \hat\omega q \Rightarrow R = e^{\hat\omega\theta}$。这里换成整段位移：$\dot g = \hat\xi g \Rightarrow g(\theta) = e^{\hat\xi\theta}$。要做的只是把 $\xi=(v,\omega)$ 摆进一个 $4\times4$：
+
+```math
+\hat\xi = \begin{bmatrix} \hat\omega & v \\ 0 & 0 \end{bmatrix}
+```
+
+这个摆法不是凑的。把它左乘 $g$：
+
+```math
+\hat\xi\,g = \begin{bmatrix} \hat\omega & v \\ 0 & 0 \end{bmatrix} \begin{bmatrix} R & p \\ 0 & 1 \end{bmatrix} = \begin{bmatrix} \hat\omega R & \hat\omega p + v \\ 0 & 0 \end{bmatrix}
+```
+
+左上正是 03 的 $\dot R = \hat\omega R$，右上正是 04.1 的 $\dot q = \hat\omega q + v$。两块都对上，说明 $\hat\xi$ 是被微分方程逼出来的形状。底行必须全零：$\hat\xi g$ 的底行要恒为 $(0,0,0,0)$，否则积分出来的 $g$ 最后一行会漂离 $(0,0,0,1)$，就不再是齐次变换了。
+
+### <span className="k">2</span> 指数算出整段位移
+
+解 $\dot g = \hat\xi g$（初值 $g(0)=I$）得 $g(\theta) = e^{\hat\xi\theta}$。按 $3+1$ 分块，右上就是这一段位移的平移量：
+
+```math
+e^{\hat\xi\theta} = \begin{bmatrix} R & p \\ 0 & 1 \end{bmatrix}, \qquad R = e^{\hat\omega\theta}, \quad p = (I - e^{\hat\omega\theta})\,\hat\omega v + \omega\omega^{\mathsf{T}}v\,\theta
+```
+
+左上就是 03 的 Rodrigues，一个字都不用改。右上两项各管一件事：$\omega\omega^{\mathsf T}v\,\theta = h\omega\theta$ 是沿轴走的那一段（长度 $d = h\theta$）；$(I-e^{\hat\omega\theta})\hat\omega v$ 是补差额的那一项。这个式子成立的前提是 $|\omega| = 1$。
+
+补什么差额？轴过原点时 $v = h\omega$，于是 $\hat\omega v = \omega\times(h\omega) = 0$，那一项自动消失，剩下的就是 $R\,q_0 + h\theta\,\omega$——干净利落。轴不过原点时 $v$ 里有垂直分量，这项负责把“绕的不是原点”这个事实补回去。
+
+</Prose>
+
+<Raw html={w04_d2} />
+
+<Prose>
+
+### <span className="k">3</span> 不用背，按三条边界现推
+
+① 左上必然是 $e^{\hat\omega\theta}$，这是 03 的原样搬运。② 沿轴那一份必然是 $h\omega\theta$，因为沿轴的速度就是 $h\omega$，而且它在转动下不变。③ 剩下的一项必须在“轴过原点”时为零，而轴过原点意味着 $\hat\omega v = 0$，所以它只能带 $\hat\omega v$ 作因子。
+
+三条对完，右上写成 $(I-e^{\hat\omega\theta})\hat\omega v + \omega\omega^{\mathsf T}v\theta$ 是唯一同时满足的形状。推不出来时，用 $\theta \to 0$ 再验一次：两项都趋于零，整块退回 $I$。
+
+### <span className="k">4</span> 退化：$\omega = 0$ 的那一支
+
+$\omega\to0$ 时，$e^{\hat\omega\theta}\to I$、$\hat\omega v\to0$、$\omega\omega^{\mathsf T}v\theta\to0$，整个式子塌成
+
+```math
+e^{\hat\xi\theta} = \begin{bmatrix} I & v\theta \\ 0 & 1 \end{bmatrix}
+```
+
+正是 02.2 的纯平移。注意它和上一式是同一块矩阵位置的两个分支，不是两种变换：左上块从旋转塌成 $I$，右上从“圆周 + 沿轴”塌成一条 $v\theta$。所以代码里只需要一个函数、一个分支判断，不需要两套。
+
+### <span className="k">5</span> 三条体检
+
+$\theta = 0$：整块是 $I$，不含任何位移。左上块：任意 $\xi$、$\theta$ 下都满足 $R^{\mathsf T}R = I$、$\det R = 1$——但它只管左上。
+
+别拿 $g^{\mathsf T}g = I$ 去验 $e^{\hat\xi\theta}$：带平移的变换不是正交矩阵，这条一定不成立，验了只会以为自己算错。
+
+复合封闭：两个这样的矩阵相乘，底行仍是 $(0,0,0,1)$，左上仍是正交块——形状不变。下一节把一串指数连乘，靠的就是这个封闭性。
+
+### <span className="k">6</span> 面板怎么用：三块纵向读
+
+下面三块是从上到下的一条链，不是三个并列的答案。读的顺序就是造它的顺序。
+
+第一块，旋量。$\xi=(v,\omega)$ 竖排六行，上三行 $v$、下三行 $\omega$；旁边给螺距 $h$ 与沿轴位移 $d = h\theta$。先看这两个数——它们是图上能量出来的量，也是判断“这是纯转还是螺旋”的依据。
+
+第二块，指数。$4\times4$ 数值：左上按列上色（红 $x$、深灰 $y$、浅灰 $z$），右上是平移列；上面一行是同一条式子的解析形式，用来把“哪一项变成了哪个数”对上号。
+
+第三块，退化。同一个槽位换成 $\omega=0$ 时的 $[I,\ v\theta;\ 0,\ 1]$。它和上面那块只差左上角：整块变成 $I$，右上一列变成直线。学生卡住的地方从来是这个分支，不是透视角度。
+
+画布上三层叠在一起：细黑是转轴，红是螺旋线，浅灰虚线是同一个 $\theta$ 下的纯转动对照（$h=0$ 的轨迹）。红手柄改 $\theta$，轴上的黑手柄分别拖 $r$（轴位置）与 $\omega$（轴方向）；下方两条滑块改螺距 $h$ 与转动半径 $\rho$。三块一起动；点“退化为纯旋转”看红线塌到圆上，点“退化为纯平移”看它拉成一条直线。
+
+<Box warn title="常见错误">
+
+- 拿 $g^{\mathsf T}g = I$ 验 $e^{\hat\xi\theta}$。它不是正交矩阵，验不过是对的。
+- 丢掉 $(I-e^{\hat\omega\theta})\hat\omega v$，只写 $R\,p_0 + h\omega\theta$。轴不过原点时，算出来的点会系统性少一段圆弧。
+- 螺距与沿轴位移混用：$d = h\theta$，$\theta$ 用弧度，别代角度。
+- $\omega$ 没单位化就套这个式子。式子的前提就写在右边那行 $|\omega|=1$。
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- $\theta = 0$ 时 $e^{\hat\xi\theta}$ 是什么？为什么？
+- 轴过原点、$h=1$、$\theta=2$，平移部分是多大？
+- 为什么 $e^{\hat\xi\theta}$ 的左上块必须是旋转矩阵，而整块不是？
+</Box>
+
+</Prose>
+
+<Raw html={w04_1} />
+
+</Section>
+
+<Section n="04.3" t="小测" en="CHECK">
+
+<Prose>
+
+规则。三道题，覆盖三处最容易错的地方：把轴位置写成 $v$、忘记退化分支、把旋量顺序记反。做完即时反馈，解析里指回对应小节。
+
+</Prose>
+
+<Raw html={w04_2} />
+
+</Section>

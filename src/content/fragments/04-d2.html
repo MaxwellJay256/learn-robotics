@@ -1,0 +1,23 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv4b" width="860" height="430"></canvas>
+      <div class="cap"><span>指数：先转，再沿轴走</span><span class="hint">Ctrl+拖 = 平移　右键拖 = 转视角</span></div>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">转角 θ</span>
+      <input class="range" id="tB" type="range" min="0" max="6.283" step="0.01" value="1.5708">
+      <b class="val" id="tBv">90°</b>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>两段位移各管一件事</span><span class="val">p = (I−R)ω̂v + hωθ</span></div>
+      <p class="note">灰虚线是 <b>只转</b>的落点：刚体绕轴转过 θ，位置由 <b>R</b> 决定。红箭头是<b>沿轴走</b>的那一段 <b>hωθ</b>。两者相加就是平移列 <b>p</b>——指数矩阵右上角那一列。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>θ = 0 时</span><span class="val">退回单位阵</span></div>
+      <p class="note">把滑块拖到 0：两段位移都消失，刚体回到灰线位置，整块矩阵变成 <b>I</b>。这是最快的验算方式。</p>
+    </div>
+  </div>
+</div>

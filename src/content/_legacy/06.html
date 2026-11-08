@@ -1,0 +1,168 @@
+<!-- ============ 06.0 引言 ============ -->
+  <section>
+    <div class="secno"><span class="n">06.0</span><span class="t">引言<em>WHY POE</em></span></div>
+    <div class="prose">
+      <h3><span class="k">1</span>正运动学要回答什么</h3>
+      <p>给定一串关节角 \(\theta_1,\dots,\theta_n\)，求末端（工具系）相对基座（空间系）的位姿 \(g_{st}(\theta)\)。这是所有后续计算的第一块砖：逆解要拿它反推，雅可比要对它求导，轨迹规划要它算末端位置。</p>
+      <p>传统教材用 DH 参数：给每个连杆挂一套坐标系，列四行参数表，连乘。本课程走另一条路——<b>指数积</b>（Product of Exponentials）。同一个答案，零件更少：不需要给中间连杆挂坐标系，只需要每个关节的一根轴。</p>
+
+      <h3><span class="k">2</span>为什么指数积更省事</h3>
+      <p>DH 的麻烦在于“挂坐标系”：连杆坐标系挂在哪、\(x\) 轴朝哪，全凭约定，错一个下标整条链都歪。指数积把每个关节只看成<b>空间中一根固定的轴</b>——轴的位置与方向在零位形下量一次，之后不再变。关节转动时，是刚体绕着这根轴转，轴本身不动。</p>
+      <p>于是整条臂的运动就是：绕轴 1 转 \(\theta_1\)，绕轴 2 转 \(\theta_2\)，……，绕轴 \(n\) 转 \(\theta_n\)。每一段都是 04 课造好的 \(e^{\hat\xi\theta}\)，连乘即可。</p>
+
+      <h3><span class="k">3</span>三个零件，一条装配线</h3>
+      <p><b>零件一</b>：每根轴写成旋量 \(\xi_i\)（04 课）。<b>零件二</b>：每个关节的位移 \(e^{\hat\xi_i\theta_i}\)（04.2 的指数）。<b>零件三</b>：零位形下工具系的位姿 \(g_{st}(0)\)（02 课的 \(g\)）。</p>
+      <p>装配规则只有一条：<b>按关节顺序左乘</b>，\(g_{st}(\theta)=e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}\cdots e^{\hat\xi_n\theta_n}g_{st}(0)\)。本节就是把这条线走一遍，并在两自由度臂上验证。</p>
+
+      <h3><span class="k">4</span>前置，还是那三样</h3>
+      <p>04 的旋量 \(\xi=(v,\omega)\) 与指数 \(e^{\hat\xi\theta}\)；02 的齐次变换与“点是 1、方向是 0”；再加上一个几何习惯：量轴的位置时，挑轴与坐标轴的交点、或两轴的交点，能省掉一半计算。</p>
+    </div>
+    <ul class="goals">
+      <li><span class="chk"></span><span>给定一根轴（方向 \(\omega\)、轴上一点 \(q\)），三十秒内写出 \(\xi=(-\omega\times q,\ \omega)\)</span></li>
+      <li><span class="chk"></span><span>写出指数积公式，并说清 \(g_{st}(0)\) 是哪个位形下的量、为什么要放在最右边</span></li>
+      <li><span class="chk"></span><span>对两自由度臂独立写出 \(g_{st}(\theta)\)，并用 \(\theta=0\) 退化验算</span></li>
+      <li><span class="chk"></span><span>小测 06.3 三题至少对两题</span></li>
+    </ul>
+  </section>
+
+  <!-- ============ 06.1 关节写成旋量 ============ -->
+  <section>
+    <div class="secno"><span class="n">06.1</span><span class="t">关节写成旋量<em>JOINT → TWIST</em></span></div>
+    <div class="prose">
+      <h3><span class="k">1</span>转动关节：轴 + 轴上一点</h3>
+      <p>转动关节的轴是一根空间直线：方向 \(\omega\)（单位向量，右手定则）、经过点 \(q\)。04 课给过旋量的构造：\(v=h\omega-\omega\times q\)；关节纯转动时螺距 \(h=0\)，于是</p>
+      <div class="formula">\[ \xi = \begin{bmatrix} -\omega\times q \\ \omega \end{bmatrix} \]</div>
+      <p>这个 \(-\omega\times q\) 就是“转轴不过原点所欠下的那笔平移”：原点不在轴上，绕轴转时原点自己要动。</p>
+
+      <h3><span class="k">2</span>移动关节：只有方向</h3>
+      <p>移动关节没有转轴，关节变量是沿某方向的位移：\(\omega=0\)，\(v\) 取该方向的单位向量。旋量就是 \(\xi=(v,\ 0)\)，指数退化成 04.2 的纯平移分支 \(\begin{bmatrix}I & v\theta\\ 0 & 1\end{bmatrix}\)。</p>
+
+      <h3><span class="k">3</span>取点从简：\(q\) 怎么挑</h3>
+      <p>\(q\) 可以是轴上的<b>任意</b>一点——换一个点，\(-\omega\times q\) 只差一个沿轴的平移分量，而沿轴分量在 \(h=0\) 时会被 \((I-e^{\hat\omega\theta})\) 吃掉，指数结果不变。所以挑最省事的那个：</p>
+      <p>轴过原点 → \(q=0\)，\(v=0\)，指数就是纯旋转；轴与某坐标轴相交 → 取交点，只有一个分量非零；两轴相交 → 取交点，两条旋量都简单。</p>
+      <p>这一步省下的计算量很实在：考试里一条臂五六根轴，每根都随便挑点，四个分量全是分数，乘起来就是灾难。</p>
+
+      <div class="box warn">
+        <div class="lbl">常见错误</div>
+        <ul>
+          <li>把 \(\xi\) 写成 \((\omega,\ v)\)。顺序是 \((v,\ \omega)\)，反了以后 \(\hat\xi\) 的分块位置错位。</li>
+          <li>忘了给 \(\omega\) 单位化。指数公式的前提是 \(|\omega|=1\)，否则实际转角是 \(|\omega|\theta\)。</li>
+          <li>把 \(q\) 取成“末端点”。\(q\) 是<b>轴上的点</b>，与工具系无关。</li>
+          <li>转动关节的 \(v\) 写成 \(\omega\times q\)。符号是负的：\(v=-\omega\times q\)。</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="lbl">离开本节前，合上文字回答</div>
+        <ul>
+          <li>\(\omega=\hat z\)、轴过 \((0,2,0)\)，写出 \(\xi\)。</li>
+          <li>为什么 \(q\) 换一个点，指数结果不变？</li>
+          <li>移动关节的 \(\xi\) 里 \(\omega\) 是什么？</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06.2 指数积公式 ============ -->
+  <section>
+    <div class="secno"><span class="n">06.2</span><span class="t">指数积公式<em>PRODUCT OF EXPONENTIALS</em></span></div>
+    <div class="prose">
+      <h3><span class="k">1</span>公式与顺序</h3>
+      <p>把每个关节的指数按顺序连乘，最后右乘零位形：</p>
+      <div class="formula">\[ g_{st}(\theta) = e^{\hat\xi_1\theta_1}\,e^{\hat\xi_2\theta_2}\cdots e^{\hat\xi_n\theta_n}\,g_{st}(0) \]</div>
+      <p><b>顺序不能换</b>：两个指数的矩阵一般不交换（03 第 7 小节）。这里的方向是“从基座往末端读”——最左边的 \(e^{\hat\xi_1\theta_1}\) 是离基座最近的关节，最右边是离工具最近的关节，然后才是 \(g_{st}(0)\)。</p>
+
+      <h3><span class="k">2</span>\(g_{st}(0)\) 是什么</h3>
+      <p>所有关节角取零时，工具系相对空间系的位姿。它是<b>量出来的常数</b>，不含 \(\theta\)：把臂摆到零位形，量工具系的原点位置与三根轴方向，填成一个 \(4\times4\)。</p>
+      <p>它的作用是把“整条臂”从基座搬到工具：前面那一串指数只描述各关节把刚体转到了哪，最后这一步把它挪到工具该在的地方。</p>
+
+      <h3><span class="k">3</span>为什么是左乘</h3>
+      <p>关节 1 转动时，它带动的是<b>后面所有连杆</b>（连同它们的轴）。左乘 \(e^{\hat\xi_1\theta_1}\) 相当于“先在空间系里把整个后续结构绕轴 1 转过去”，这正符合物理：基座关节一动，整条臂跟着动。</p>
+      <p>反过来，如果把 \(e^{\hat\xi_1\theta_1}\) 放到右边，等于说“只有工具自己绕轴 1 转”，与事实不符。这个顺序错误在考试里扣分最狠——形状对、数值全错。</p>
+
+      <h3><span class="k">4</span>三条体检</h3>
+      <p><b>\(\theta=0\)</b>：所有指数变成 \(I\)，公式退回 \(g_{st}(0)\)。这是最快的验算：写完公式代 \(\theta=0\)，对不上就是哪里错了。</p>
+      <p><b>底行</b>：每个指数底行都是 \((0,0,0,1)\)，连乘后仍如此；最后一行永远是 \((0,0,0,1)\)。</p>
+      <p><b>单关节</b>：只动第 \(i\) 个关节、其余置零，结果应等于“把零位形的工具绕轴 \(i\) 转 \(\theta_i\)”。这条能单独验证每一根轴取得对不对。</p>
+
+      <div class="box warn">
+        <div class="lbl">常见错误</div>
+        <ul>
+          <li>把 \(g_{st}(0)\) 放到最左边。它必须最右，因为它是“零位形”的量，不是关节。</li>
+          <li>连乘顺序从工具往基座写。读题时先标出“哪个关节离基座最近”，它对应最左边。</li>
+          <li>忘了 \(g_{st}(0)\) 也要参与乘法，直接写成一串指数的乘积。</li>
+          <li>用 DH 的表去套指数积。两套体系的参数不能混，本课程统一用旋量。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="canvasbox">
+          <canvas id="cv1" width="860" height="520"></canvas>
+          <div class="cap"><span>2-DOF planar arm · POE</span><span class="hint">◎ 两个手柄 = 拖 θ₁ / θ₂　细黑 = 零位形</span></div>
+        </div>
+        <div class="toolbar">
+          <button class="primary" id="anim1">从零位形演示</button>
+          <button id="snap45">θ = (45°, 45°)</button>
+          <button id="reset1">重置</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pblock">
+          <div class="plabel"><span>关节旋量 · 轴与取点</span><span class="val" id="xiOut">θ = (0°, 0°)</span></div>
+          <div class="eq"><span class="mathout" id="Xi1"></span></div>
+          <div class="eq"><span class="mathout" id="Xi2"></span></div>
+          <p class="note">两轴都取 \(q\) 在关节中心；\(v=-\omega\times q\) 的符号决定转轴不过原点时原点的速度方向。</p>
+        </div>
+
+        <div class="pblock">
+          <div class="plabel"><span>指数积 · 三个零件的乘积</span><span class="val" id="gOut">g live</span></div>
+          <div class="eq"><span class="mathout" id="Gmat"></span></div>
+          <p class="note">左上 \(2\times2\) 块是两转角之和的旋转，右上是工具原点位置。把 \(\theta_1=\theta_2=0\) 代进去，它必须退回 \(g_{st}(0)\)。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06.4 小测 ============ -->
+  <section>
+    <div class="secno"><span class="n">06.3</span><span class="t">小测<em>CHECK</em></span></div>
+    <div class="prose">
+      <p><b>规则。</b>三题，覆盖本课三处最容易错的地方：旋量的符号、连乘顺序、零位形的地位。做完即时反馈，解析指回对应小节。</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q" data-q="1">
+        <div class="qhead"><span class="qn">Q1</span><span class="qt">转动关节的轴过点 \(q\)、方向 \(\omega\)（单位）。旋量的平移分量 \(v\) 是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>\(-\omega\times q\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>\(\omega\times q\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q1"></span>\(q\)</label>
+        </div>
+        <div class="explain" data-for="1"></div>
+      </div>
+
+      <div class="q" data-q="2">
+        <div class="qhead"><span class="qn">Q2</span><span class="qt">两自由度臂的正运动学是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\(g_{st}=e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}g_{st}(0)\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\(g_{st}=g_{st}(0)e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}\)</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q2"></span>\(g_{st}=e^{\hat\xi_2\theta_2}e^{\hat\xi_1\theta_1}g_{st}(0)\)</label>
+        </div>
+        <div class="explain" data-for="2"></div>
+      </div>
+
+      <div class="q" data-q="3">
+        <div class="qhead"><span class="qn">Q3</span><span class="qt">\(g_{st}(0)\) 的含义是？</span></div>
+        <div class="opts">
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>所有关节角为零时，工具系相对空间系的位姿</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>单位阵，因为零位形没有运动</label>
+          <label class="opt"><span class="tick"><input type="radio" name="q3"></span>工具系原点在空间系原点的位置</label>
+        </div>
+        <div class="explain" data-for="3"></div>
+      </div>
+
+      <div class="score"><span class="big" id="scoreNum">0</span><span class="of">/ 3 · 答对即刻计入</span></div>
+    </div>
+  </section>
