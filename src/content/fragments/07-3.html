@@ -1,0 +1,33 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv3" width="860" height="520"></canvas>
+      <div class="cap"><span>子问题 3 · 距离 δ 对应两个转角</span><span class="hint">拖 θ = 转 p　拖 δ = 改目标距离</span></div>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">θ</span>
+      <input class="range" id="s3th" type="range" min="0" max="360" step="1" value="0">
+      <b class="val" id="s3thv">0°</b>
+      <span class="tlabel">目标距离 δ</span>
+      <input class="range" id="s3d" type="range" min="13" max="32" step="1" value="26">
+      <b class="val" id="s3dv">2.60</b>
+      <span class="tlabel">沿轴偏移 h</span>
+      <input class="range" id="s3h" type="range" min="-10" max="10" step="1" value="0">
+      <b class="val" id="s3hv">0.0</b>
+      <button id="s3sol">跳到解</button>
+      <button id="s3reset">重置</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>先扣掉沿轴分量</span><span class="val" id="s3dOut">δ′</span></div>
+      <div class="eq"><span class="mathout" id="s3formula"></span></div>
+      <p class="note">左图是垂直平面内的单位圆与目标点，虚线圈是“到目标点距离等于 \(\delta'\)”的点集；右图是距离 \(d(\theta)\) 的整条曲线，\(\delta\) 水平线与它有几个交点就有几个解。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>两个解</span><span class="val" id="s3solOut">θ</span></div>
+      <div class="eq"><span class="mathout" id="s3ang"></span></div>
+      <p class="note" id="s3note">—</p>
+    </div>
+  </div>
+</div>

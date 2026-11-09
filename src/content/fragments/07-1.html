@@ -1,0 +1,31 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv1" width="860" height="520"></canvas>
+      <div class="cap"><span>子问题 1 · 沿轴看与 ρ–h 图</span><span class="hint">拖 θ = 转 p　拖 φ = 改 q 的方向</span></div>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">θ</span>
+      <input class="range" id="s1th" type="range" min="0" max="360" step="1" value="0">
+      <b class="val" id="s1thv">0°</b>
+      <span class="tlabel">q 方向 φ</span>
+      <input class="range" id="s1phi" type="range" min="0" max="360" step="1" value="90">
+      <b class="val" id="s1phiv">90°</b>
+      <button id="s1badr">破坏：半径不等</button>
+      <button id="s1badh">破坏：高度不等</button>
+      <button id="s1reset">重置</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>两条有解条件</span><span class="val" id="s1statOut">有解</span></div>
+      <div class="eq"><span class="mathout" id="s1cond"></span></div>
+      <p class="note">左图沿轴看，红色是 \(u_\perp\)、灰色是 \(v_\perp\)；右图把每个点画成“离轴距离 \(\rho\) 与沿轴高度 \(h\)”的一对坐标，绕轴转不改变这两样。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>解出的转角</span><span class="val" id="s1angOut">θ</span></div>
+      <div class="eq"><span class="mathout" id="s1ang"></span></div>
+      <p class="note" id="s1note">—</p>
+    </div>
+  </div>
+</div>

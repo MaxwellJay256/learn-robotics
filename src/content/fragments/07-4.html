@@ -1,0 +1,29 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv4" width="860" height="470"></canvas>
+      <div class="cap"><span>2R 逆解 · 两个解从哪来</span><span class="hint">拖目标点 = 改 (x, y)</span></div>
+    </div>
+    <div class="toolbar">
+      <span class="tlabel">x</span>
+      <input class="range" id="tx" type="range" min="-240" max="240" step="1" value="100">
+      <b class="val" id="txv">1.00</b>
+      <span class="tlabel">y</span>
+      <input class="range" id="ty" type="range" min="-240" max="240" step="1" value="100">
+      <b class="val" id="tyv">1.00</b>
+      <button id="btnReach">目标拖到可达边界</button>
+      <button id="btn45">目标 (1, 1)</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>两个解</span><span class="val" id="solOut">θ₂ = ±</span></div>
+      <div class="eq"><span class="mathout" id="mathSol"></span></div>
+      <p class="note">红 = 肘部朝上一支（θ₂ 取负），灰 = 肘部朝下一支（θ₂ 取正）；两支末端都到目标点，肩肘角不同。β 是肩—肘—腕心三角形的内角。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>可达性</span><span class="val" id="statOut">—</span></div>
+      <p class="note" id="stat">拖目标点，观察 r 是否落在 |l₁−l₂| 与 l₁+l₂ 之间。</p>
+    </div>
+  </div>
+</div>

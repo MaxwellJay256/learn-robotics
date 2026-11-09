@@ -1,0 +1,481 @@
+import Section from '../components/Section.astro';
+import Prose from '../components/Prose.astro';
+import Box from '../components/Box.astro';
+import Raw from '../components/Raw.astro';
+import w07_1 from './fragments/07-1.html?raw';
+import w07_2 from './fragments/07-2.html?raw';
+import w07_3 from './fragments/07-3.html?raw';
+import w07_4 from './fragments/07-4.html?raw';
+
+<Section n="07.0" t="引言" en="FROM POSE TO JOINT ANGLES">
+<Prose>
+
+### <span className="k">1</span> 场景：示教器上摆着一个目标
+
+示教器上摆着一个具体目标：末端到 $(1.2,0.6,1.0)$（单位 m，空间系），工具系的 $z$ 轴对准<strong>接近向量</strong> $\hat z_t=(0,0,1)$。接近向量是工具系 $z$ 轴在空间系里的单位方向，2024 Q3(b) 把它作为第二个输入直接给出三个分量；它只规定工具“指向哪”，不规定绕这个方向转了多少，所以它比完整姿态少一个约束。控制器最终要交出的是五个关节角 $\theta_1,\dots,\theta_5$：机器人只认关节角，末端位姿只是它们算出来的结果。
+
+06.2 的指数积把“关节角到末端位姿”写成一个连乘 $g_{st}(\theta)=e^{\hat\xi_1\theta_1}\cdots e^{\hat\xi_n\theta_n}g_{st}(0)$，这个方向是代进去出数，属于正运动学。逆运动学要把箭头反过来：已知左边的 $g$，求指数里的 $\theta$。难点在于未知数长在矩阵指数的指数上，而矩阵乘法不交换，所以不能像解线性方程组那样把一个关节直接“除过去”；本章的做法是先把几何结构找出来，把指数积拆成几个只含一两个未知角的小方程，再逐个解掉。
+
+拆方程的路线并不需要新工具，它的每个部件都能在 04 和 06 里找到出处：04 给了绕轴转的指数 $e^{\hat\xi\theta}$，06 给了按关节顺序连乘的指数积，剩下的工作只是选择“把哪个点代进去、两边同时加减什么”。学完这一章，遇到 2024 Q3(b) 那种“给工具原点与接近向量、求五个关节角”的题，应该能写出一条可检查的答题线，不用再从公式表里猜下一步。这条答题线由 07.4 给出，前面三节负责把它的零件造好。
+
+### <span className="k">2</span> 两种输入：六个约束与五个约束
+
+输入的信息量决定解的个数。完整位姿有六个独立约束：三个位置、三个姿态；五个关节只有五个未知数，六个约束压五个未知数一般无解。所以 2024 Q3(b) 给的输入是“工具原点位置 + 接近向量”：位置占三个约束，单位方向占两个约束（单位向量只剩两个自由度），一共五个，正好和五个关节配平。约束数和关节数相等，这道题才可能用解析法解完；少一个约束会多出一族解，多一个约束会直接无解。
+
+把这条经验写成一般规则：设关节数为 $n$、独立约束数为 $m$，$m=n$ 时解是有限个离散值，$m \lt n$ 时有无穷多解（多出来的自由度可以随便挑），$m \gt n$ 时一般无解。考场上先数一遍约束，再决定答案该写成“几组离散角”还是“一族角”：这一步只花十秒，却能避免把无穷多解写成两组、或者把无解硬算成有解。2024 Q3(b) 正好是 $m=n$ 的情形，所以答案应该是几组离散的角度，逐组写出来。
+
+本章要拆出的三个几何小方程都落在“有限个离散解”这一类：每个最多两支解，拆到最后一个角时，解的个数就是各步支数的乘积。所以 07.5 的小测会检查多解与退化情形，因为多解是几何结构的一部分，它和算错没有关系。每算完一支都要问一句“这一步最多出几支”，把所有分支乘起来才是完整的答案。
+
+### <span className="k">3</span> 本节要造的三件工具
+
+本章不造新的矩阵工具，只教“怎么选点、怎么套公式”。第一件是三个<strong>子问题</strong>（subproblem）：把逆解拆成三个可以反复套用的几何小问题——子问题 1 绕单轴转到点、子问题 2 绕两相继轴、子问题 3 旋转到给定距离；每个子问题都有现成公式，最多给出两支解。第二节到第四节逐个把它们推出来。
+
+第二件是两条分解技巧：取轴上的点，让某个关节的指数作用在它身上变成恒等；两边减去一个共同点，再用“旋转保持长度”把前面的指数从范数里赶出去。第三件是一个固定答题顺序：先算<strong>腕心</strong>（wrist center，腕部两根或三根轴的交点）、再定基座角、然后肩肘、最后腕部；顺序定下来，考场上就不用每次重新想下一步该解哪个角。这两条技巧和三个子问题会在 07.4 拼成同一条路线，顺序也是固定的。
+
+顺序重要，是因为逆解本质上是消元：每解出一个角，就把它代回去，方程里少一个未知数。顺序一乱，容易把已经解出的量当未知量再解一遍，或者解一个根本不含目标关节的方程，算到最后才发现白算。07.4 会把两条技巧和这个顺序拼成一条能直接抄进考卷的答题线。
+
+<Box title="三件工具：子问题、两条技巧、固定顺序">
+
+- <strong>子问题 1/2/3</strong>：单轴转到点、两相继轴、旋转到给定距离；每个最多两支解。
+- <strong>两条技巧</strong>：取轴上点消掉关节；两边减去共同点化成距离问题。
+- <strong>固定顺序</strong>：腕心 → 基座角 → 肩肘 → 腕部；每解一个角就回代验算。
+
+</Box>
+
+### <span className="k">4</span> 回看：四条旧结论各管一段
+
+本节直接依赖四条旧结论。02 给了 $g$ 的分块 $\begin{bmatrix}R&p\\0&1\end{bmatrix}$ 与它的逆，所以“取三个位置分量”“两边相减”都是对位姿矩阵的分块操作，不会碰坏旋转部分。04 的 $e^{\hat\xi\theta}$ 是绕空间轴 $\xi$ 转 $\theta$ 的齐次变换；06 把它按关节顺序左乘连起来，就得到整条臂的正运动学。
+
+05.1 还推过一条本章反复用的性质：旋转保持长度和夹角，所以 $R^{\mathsf T}(a\times b)=(R^{\mathsf T}a)\times(R^{\mathsf T}b)$，且 $\lVert Ra\rVert=\lVert a\rVert$。这条性质让“对等式两边取范数”变成一个真正的消元动作：被旋转作用的那一项在范数里消失了，方程里就少一个未知角度。本节后面每次写“两边减去共同点，再取范数”，用的都是它。
+
+记不清就先回看 02.2 的分块求逆、04.2 的指数公式、05.1 第 3 小节的叉乘性质与 06.2 的指数积；本章不再重复推导，只在这些结论上做几何选择。把旧结论当成工具，每道题就不必从头推一遍，这是这一章最省时间的做法；推导本身已经在前四课里做完了。旧结论忘了就回去翻对应小节，本章的篇幅全部留给“怎么选点”。
+
+</Prose>
+
+<ul className="goals">
+  <li><span className="chk"></span><span>写出子问题 1 的 $\mathrm{atan2}$ 公式，并说清有解条件与“转反了”的负解从哪来</span></li>
+  <li><span className="chk"></span><span>用 $\alpha,\beta,\gamma$ 解子问题 2，把两支 $z$ 回代成两组关节角</span></li>
+  <li><span className="chk"></span><span>用子问题 3 把距离翻译成角度，写出两解与无解条件</span></li>
+  <li><span className="chk"></span><span>按 2024 Q3(b) 的顺序写出五自由度逆解：腕心 → 基座角 → 肩肘 → 腕部，并说出多解最多几组</span></li>
+</ul>
+</Section>
+
+<Section n="07.1" t="子问题 1：绕单轴转到点" en="SUB 1 · ROTATE ABOUT ONE AXIS">
+<Prose>
+
+### <span className="k">1</span> 场景：把销孔转到对准位置
+
+装配线上要把一个销孔转到对准位置：销孔中心现在在 $p=(1,0,0)$（单位 m，空间系），目标位置是 $q=(0,1,0)$，转轴是空间系的 $z$ 轴、过原点。问转多少度。这个问题只有一根轴、一个点、一个未知角，看起来比整条机械臂简单得多，但它就是 06 指数积里单独一个 $e^{\hat\xi\theta}$ 的反解——后面所有关节角的拆解，最后都会落回这种形式。
+
+把“绕轴转 $\theta$”写成 06 的指数。这里的 $\xi$ 是<strong>零螺距运动旋量</strong>：纯转动关节的旋量，螺距为零，$v$ 只补“轴不过原点”欠下的那笔平移，所以指数 $e^{\hat\xi\theta}$ 就是一个绕空间轴转 $\theta$ 的齐次变换。子问题 1 可以写成方程 $e^{\hat\xi\theta}p=q$：已知轴 $\xi$（方向是单位向量 $\omega$，轴经过点 $r$）和两个点 $p,q$，求转角 $\theta$（单位 rad）。
+
+先看有解的前提。轴上的点转完还在原地，所以轴上点怎么选不影响转角；但 $p$ 到轴的距离在旋转中保持不变，因此 $q$ 到轴的距离必须和它相等，否则 $q$ 根本不在 $p$ 的旋转圆上，方程无解。这一条检查要在代公式之前做完，因为公式本身不会告诉你“目标不可达”，它只会算出一个没有几何意义的数。
+
+### <span className="k">2</span> 直觉：减掉轴上的点，问题只剩一个平面
+
+取轴上任意一点 $r$，定义 $u=p-r$、$v=q-r$，两个向量都是从轴上的同一点量出来的位移（单位 m，空间系）。因为 $r$ 在轴上，$e^{\hat\xi\theta}r=r$，两边减去 $r$ 之后方程变成 $e^{\hat\xi\theta}u=v$；这一步把“轴在空间里的位置”从问题里消掉，只剩下“绕单位向量 $\omega$ 转”，轴过不过原点对 $u,v$ 来说不再重要。这一步把三维方程压成二维方程，后面两条有解条件都是在这个二维问题里读出来的。
+
+```math
+u=p-r,\qquad v=q-r,\qquad
+u_\perp=u-\omega\omega^{\mathsf T}u,\qquad
+v_\perp=v-\omega\omega^{\mathsf T}v
+```
+
+再把 $u,v$ 拆成沿轴和垂直轴两部分。沿轴分量是 $\omega\omega^{\mathsf T}u$ 与 $\omega\omega^{\mathsf T}v$，绕轴转时它们不动；垂直分量是 $u_\perp$ 与 $v_\perp$，它们就在垂直于轴的平面里绕圈。于是有解条件变成两条：沿轴分量相等（$\omega^{\mathsf T}u=\omega^{\mathsf T}v$），垂直平面内的长度相等（$\lVert u_\perp\rVert=\lVert v_\perp\rVert$）。这一步在物理上做的是“把三维问题压到一个圆上”：沿轴分量只负责对齐高度，真正的转角由圆上的弧决定。
+
+```math
+\omega^{\mathsf T}u=\omega^{\mathsf T}v,\qquad
+\lVert u_\perp\rVert=\lVert v_\perp\rVert
+```
+
+两条条件各有物理含义。第一条说“$p,q$ 沿轴方向的坐标一致”，也就是两个点离轴的轴向高度相同；第二条说“$p,q$ 到轴的距离一样”，也就是两个点落在同一个以轴为圆心的圆上。$p$ 在轴上时 $u_\perp=0$，旋转根本不动它，方程对任意 $\theta$ 成立，这是后面要单独处理的退化情形。
+
+### <span className="k">3</span> 公式：用 atan2 一次读出转角与符号
+
+在垂直平面里，$u_\perp$ 绕轴转 $\theta$ 后要落在 $v_\perp$ 的方向上。点积给出 $u_\perp^{\mathsf T}v_\perp=\lVert u_\perp\rVert\lVert v_\perp\rVert\cos\theta$，叉乘给出 $\omega^{\mathsf T}(u_\perp\times v_\perp)=\lVert u_\perp\rVert\lVert v_\perp\rVert\sin\theta$，两个式子把同一个角的余弦和正弦分开交了出来。因为有解条件已经保证两个长度相等，所以两个式子里的公因子 $\lVert u_\perp\rVert\lVert v_\perp\rVert$ 相同，可以直接约掉。
+
+```math
+\theta=\mathrm{atan2}\bigl(\omega^{\mathsf T}(u_\perp\times v_\perp),\;u_\perp^{\mathsf T}v_\perp\bigr)
+```
+
+$\mathrm{atan2}$ 同时吃进正弦分子和余弦分子，返回 $(-\pi,\pi]$ 内的角：第一个参数放叉乘项（正弦），第二个参数放点积项（余弦），这样象限和符号都不会丢。用普通 $\arccos$ 只能拿到 $[0,\pi]$，等于默认转角非负，“往反方向转”的那一支会被漏掉；装配时这一支往往就是唯一能让销孔对上的方向。这一步在物理上干的事情，是先在垂直平面内读出“从 $u_\perp$ 到 $v_\perp$ 要转多少、往哪边转”，再把符号交还给角度：叉乘项指向 $\omega$ 时转正角，指向 $-\omega$ 时转负角，所以公式里的符号来自右手定则，并不需要额外约定。
+
+### <span className="k">4</span> 算例：三个目标点与一根换了位置的轴
+
+用 $\omega=\hat z$、轴过 $r=0$、$p=(1,0,0)$ 走三个目标。$q=(0,1,0)$ 时 $u_\perp=(1,0,0)$、$v_\perp=(0,1,0)$，$u_\perp\times v_\perp=(0,0,1)$ 与 $\omega$ 同向，点积为零，$\theta=\mathrm{atan2}(1,0)=90^\circ$。$q=(0,-1,0)$ 时 $v_\perp=(0,-1,0)$，叉乘变成 $(0,0,-1)$，点积仍为零，$\theta=\mathrm{atan2}(-1,0)=-90^\circ$：两个点到轴的距离相同，方向反过来，转角就取负。
+
+第三个目标 $q=(0,2,0)$ 给出 $\lVert u_\perp\rVert=1$、$\lVert v_\perp\rVert=2$，有解条件不成立，方程无解。公式没有算错：绕轴转只能把 $p$ 送到半径 $1$ 的圆上，$q$ 在半径 $2$ 的圆上，无论转多少度都到不了。考场上遇到这种情况要写“无解并说明目标不在旋转圆上”，硬代 $\arccos$ 会得到一个不存在的角。
+
+再换一根轴不过原点的例子：$r=(0,0,1)$、$p=(1,0,1)$、$q=(0,1,1)$。减完 $r$ 之后 $u=(1,0,0)$、$v=(0,1,0)$，与上面第一个目标完全相同，$\theta=90^\circ$。这说明轴上的点怎么选不影响结果，但一定要减：减掉 $r$ 才能把“轴的位置”从方程里消去，直接拿 $p,q$ 去算，算出来的是绕原点的转角，对应的是另一根轴。
+
+暂停一下。如果 $u_\perp=0$，也就是 $p$ 正好落在轴上，子问题 1 的解是什么？先写下答案，再看下一节。答案：无穷多解，因为 $p$ 在轴上，转多少它都不动，任何 $\theta$ 都满足方程；从公式看，两个长度都为零，$\mathrm{atan2}(0,0)$ 没有定义，公式在这里必须停下来判退化。
+
+读图时按三步看：① 先拖 θ，看左图红点 p(θ) 在单位圆上走，灰箭头是 q 的投影方向；
+② 再点“破坏：半径不等”或“破坏：高度不等”，看右图 ρ–h 平面上两个点分开后，左图怎么拖都对不上——这就是两条有解条件；
+③ 恢复条件后把 θ 拖到 φ，红点落到目标点上，面板给出的就是 atan2 解出的角。
+
+</Prose>
+
+<Raw html={w07_1} />
+
+<Prose>
+
+<Box warn title="常见错误">
+
+- 不减 $r$，直接拿 $p,q$ 算角。算出来的是“绕原点”的转角，轴不过原点时结果全错，而且错得没有规律。
+- 把 $\mathrm{atan2}$ 写成普通 $\arccos$。$\arccos$ 只返回 $[0,\pi]$，丢掉“往反方向转”的负解，装配时可能把销孔转向另一边。
+- 不检查 $\omega^{\mathsf T}u=\omega^{\mathsf T}v$ 与 $\lVert u_\perp\rVert=\lVert v_\perp\rVert$。目标不在旋转圆上时照算，会得到一个根本不存在的角。
+- 用没单位化的 $\omega$。叉乘项会差一个 $|\omega|$ 倍，$\mathrm{atan2}$ 两个参数的比例被破坏，角度直接错。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- 子问题 1 的两个有解条件分别是什么？各自在物理上表示什么？
+- $\mathrm{atan2}$ 的两个参数里为什么可以约掉 $\lVert u_\perp\rVert\lVert v_\perp\rVert$？
+- 若 $p$ 在轴上，为什么有无穷多解？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="07.2" t="子问题 2：绕两相继轴" en="SUB 2 · TWO INTERSECTING AXES">
+<Prose>
+
+### <span className="k">1</span> 场景：两根相交轴，两个未知角
+
+腕部两个关节的轴交于一点 $r$，这个交点就是后面要反复用的腕心。一个点 $p$ 先绕轴 2 转 $\theta_2$，再绕轴 1 转 $\theta_1$，到达 $q$，方程是 $e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}p=q$。未知数有两个，两个指数又不能交换，所以不能把 $\theta_1$ 直接“除过去”再套两次子问题 1；这是子问题 2 比子问题 1 多出来的那层困难。
+
+07.1 的经验是先减掉轴上的点。这里两根轴都过 $r$，取 $r$ 当共同原点：$u=p-r$、$v=q-r$，方程变成 $e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}u=v$，而且两个旋转都保持到 $r$ 的距离不变，所以必须有 $\lVert u\rVert=\lVert v\rVert$，这条条件在代数上不出现，却决定有没有解。接下来引入一个中间点 $z$，它是 $u$ 绕轴 2 转完的位置，也是 $v$ 绕轴 1 转回来之前的位置；把 $z$ 解出来，两个角就各归各的子问题 1。
+
+这个场景在数值上也先固定一组数：$\omega_1=\hat z$、$\omega_2=\hat x$、$r=0$、$p=(0,1,0)$、$q=\bigl(-\tfrac{\sqrt2}{2},0,\tfrac{\sqrt2}{2}\bigr)$，长度单位取 m。下面 07.2 的直觉、公式与算例都用这一组，不再换数；先记住两个关节的轴是垂直的，所以 $\omega_1^{\mathsf T}\omega_2=0$，公式里的分母不会接近零。这组数在 07.2 的算例里从 $\alpha$、$\beta$、$\gamma$ 一直走到两组角，每一步都能用手算核对。
+
+### <span className="k">2</span> 直觉：中间点落在两个圆的交点上
+
+把中间点记作 $z=e^{\hat\xi_2\theta_2}u=e^{-\hat\xi_1\theta_1}v$，它是 $u$ 转完轴 2 之后的位置，也是 $v$ 被轴 1 转回去之前的位置。绕轴 2 的旋转让 $z$ 落在以 $\omega_2$ 为轴、$\lVert u\rVert$ 为半径的圆上，同时保持沿 $\omega_2$ 的分量不变；绕轴 1 那边则要求 $z$ 落在以 $\omega_1$ 为轴、$\lVert v\rVert$ 为半径的圆上，并保持沿 $\omega_1$ 的分量不变。两个圆最多交于两点，所以子问题 2 最多两解；两圆相切时一解，不相交时无解。
+
+两轴不平行时，$\omega_1$、$\omega_2$、$\omega_1\times\omega_2$ 三根向量线性无关，构成 $\mathbb{R}^3$ 的一组基，所以 $z$ 可以唯一写成 $\alpha\omega_1+\beta\omega_2+\gamma(\omega_1\times\omega_2)$。这一步把“两个圆相交”翻译成“求三个实数”：$\alpha,\beta$ 是 $z$ 在两轴张成平面上的坐标，$\gamma$ 是它离开这个平面的高度，正负两支正好对应两个交点里选哪一个。两轴平行时这三根向量构不成基，$z$ 的分解不唯一，公式要换一种写法，这是本课不细讲的情形。
+
+```math
+z=\alpha\omega_1+\beta\omega_2+\gamma(\omega_1\times\omega_2)
+```
+
+沿轴分量不变这一条给了两个线性方程：$\omega_2^{\mathsf T}z=\omega_2^{\mathsf T}u$（绕轴 2 转不改沿 $\omega_2$ 的分量）与 $\omega_1^{\mathsf T}z=\omega_1^{\mathsf T}v$（$z$ 转回 $v$ 时绕轴 1 不改沿 $\omega_1$ 的分量）。把 $z$ 的三项展开代进这两个方程，就能解出 $\alpha,\beta$；$\gamma$ 不在这两个方程里，它由长度条件 $\lVert z\rVert=\lVert u\rVert$ 定，开方给出正负两支。两个轴向方程不含 $\gamma$，所以 $\alpha,\beta$ 可以先单独解出来，公式因此能分两步走。
+
+```math
+\omega_2^{\mathsf T}z=\omega_2^{\mathsf T}u,\qquad
+\omega_1^{\mathsf T}z=\omega_1^{\mathsf T}v
+```
+
+### <span className="k">3</span> 公式：先解 $\alpha,\beta$，再让长度定 $\gamma$
+
+把 $z=\alpha\omega_1+\beta\omega_2+\gamma(\omega_1\times\omega_2)$ 代入两个轴向方程。因为 $\omega_1^{\mathsf T}(\omega_1\times\omega_2)=0$、$\omega_2^{\mathsf T}(\omega_1\times\omega_2)=0$，$\gamma$ 那一项在点积里直接消失，剩下的是一个关于 $\alpha,\beta$ 的二元一次方程组；它的系数只由两轴夹角的余弦 $\omega_1^{\mathsf T}\omega_2$ 决定，所以解也只用这个余弦表示。这一步在物理上是在“对齐两个投影”：先把 $z$ 在两轴平面上的坐标定死，再让它离开平面去找交点。
+
+```math
+\alpha=\frac{(\omega_1^{\mathsf T}\omega_2)(\omega_2^{\mathsf T}u)-\omega_1^{\mathsf T}v}{(\omega_1^{\mathsf T}\omega_2)^2-1},\qquad
+\beta=\frac{(\omega_1^{\mathsf T}\omega_2)(\omega_1^{\mathsf T}v)-\omega_2^{\mathsf T}u}{(\omega_1^{\mathsf T}\omega_2)^2-1}
+```
+
+$\gamma$ 由长度约束定。把 $z$ 按基底展开求 $\lVert z\rVert^2$，交叉项里只有 $\alpha\beta$ 那一项不消失，因为 $\omega_1^{\mathsf T}(\omega_1\times\omega_2)=\omega_2^{\mathsf T}(\omega_1\times\omega_2)=0$，于是 $\lVert z\rVert^2=\alpha^2+\beta^2+\gamma^2\lVert\omega_1\times\omega_2\rVert^2+2\alpha\beta\omega_1^{\mathsf T}\omega_2$，令它等于 $\lVert u\rVert^2$ 就解出 $\gamma^2$。开方要取正负两支：两个交点对称地落在两轴张成平面的两侧，$\gamma=0$ 时两支重合，只剩一解。这一步在物理上是在“量”中间点到两轴平面的高度，高度为零就是圆相切的那一刻。
+
+```math
+\gamma^2=\frac{\lVert u\rVert^2-\alpha^2-\beta^2-2\alpha\beta\,\omega_1^{\mathsf T}\omega_2}{\lVert\omega_1\times\omega_2\rVert^2}
+```
+
+公式还藏着一个退化警告：两轴越接近平行，分母 $\lVert\omega_1\times\omega_2\rVert^2$ 越小，$\gamma$ 对输入误差越敏感；两轴重合时分母为零，整个做法失效，问题退化成子问题 1。考场上遇到两轴平行或重合，要先写一句“此时 $\omega_1\times\omega_2=0$，子问题 2 退化”，再把总转角当成一个未知数处理。两圆相切时 $\gamma=0$，转角是唯一解，对应机械臂刚好伸直的位形。
+
+### <span className="k">4</span> 算例：两支都算出来，再代回去验
+
+把给出的数代进公式。$\omega_1^{\mathsf T}\omega_2=0$、$\omega_2^{\mathsf T}u=\hat x^{\mathsf T}(0,1,0)=0$、$\omega_1^{\mathsf T}v=\hat z^{\mathsf T}\bigl(-\tfrac{\sqrt2}{2},0,\tfrac{\sqrt2}{2}\bigr)=\tfrac{\sqrt2}{2}$，所以 $\alpha=\bigl(0-\tfrac{\sqrt2}{2}\bigr)/(0-1)=\tfrac{\sqrt2}{2}$、$\beta=\bigl(0-0\bigr)/(0-1)=0$。长度约束给 $\gamma^2=\bigl(1-\tfrac12\bigr)/1=\tfrac12$，即 $\gamma=\pm\tfrac{\sqrt2}{2}$。
+
+```math
+\alpha=\frac{\sqrt2}{2},\qquad \beta=0,\qquad \gamma=\pm\frac{\sqrt2}{2}
+```
+
+```math
+z=\frac{\sqrt2}{2}\hat z\pm\frac{\sqrt2}{2}(\hat z\times\hat x)
+=\Bigl(0,\;\pm\frac{\sqrt2}{2},\;\frac{\sqrt2}{2}\Bigr)
+```
+
+求完 $z$ 回到子问题 1。正支 $z=\bigl(0,\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2}\bigr)$：把 $u=(0,1,0)$ 绕 $\hat x$ 转，得到 $(0,\cos\theta_2,\sin\theta_2)$，对比 $\cos\theta_2=\tfrac{\sqrt2}{2}$、$\sin\theta_2=\tfrac{\sqrt2}{2}$，所以 $\theta_2=45^\circ$；$v$ 在 $xy$ 平面的方向角是 $180^\circ$，$z$ 的方向角是 $90^\circ$，$e^{-\hat\xi_1\theta_1}v=z$ 要求把 $v$ 转 $-90^\circ$，所以 $\theta_1=90^\circ$。用这两个角代回正运动学：先用 $e^{\hat\xi_2 45^\circ}$ 把 $p$ 送到 $\bigl(0,\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2}\bigr)$，再绕 $z$ 转 $90^\circ$，$(x,y)\to(-y,x)$，得到 $\bigl(-\tfrac{\sqrt2}{2},0,\tfrac{\sqrt2}{2}\bigr)=q$，方程成立。
+
+负支 $z=\bigl(0,-\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2}\bigr)$ 照样走一遍，对比余弦与正弦得 $\theta_2=135^\circ$；这次从 $v$ 的方向角 $180^\circ$ 转到 $z$ 的 $-90^\circ$ 需要 $+90^\circ$ 的旋转，所以 $\theta_1=-90^\circ$。代回验算：$e^{\hat\xi_2 135^\circ}p=\bigl(0,-\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2}\bigr)$，再绕 $z$ 转 $-90^\circ$，$(x,y)\to(y,-x)$，同样回到 $q$。两支的 $\gamma$ 一正一负，正好对应中间点落在两轴平面的一侧或另一侧。
+
+```math
+e^{\hat\xi_1 90^\circ}e^{\hat\xi_2 45^\circ}p
+=\Bigl(-\frac{\sqrt2}{2},0,\frac{\sqrt2}{2}\Bigr)=q,\qquad
+e^{\hat\xi_1(-90^\circ)}e^{\hat\xi_2 135^\circ}p
+=\Bigl(-\frac{\sqrt2}{2},0,\frac{\sqrt2}{2}\Bigr)=q
+```
+
+两支解来自两个不同的中间点 $z$，各自配出一组角；给一组角加负号，得不到另一组角。验算时把两组角分别代回原方程，哪一组对得上，就说明那一支的符号没记反。考试里写子问题 2，先写 $z$ 的两支，再分别回代解两次子问题 1，最后把两组角都代回原方程验算；只写一组会被扣掉一半分，而不回代验算则容易把 $\gamma$ 的符号和 $\theta_1$ 的转向弄反。
+
+暂停一下。两轴重合时，子问题 2 变成什么？先写下答案，再看下一节。答案：两轴重合时两个旋转绕同一根轴，合起来还是绕这根轴转 $\theta_1+\theta_2$，问题退化成子问题 1，只有总转角确定，单独的两个角有无穷多组分法；公式里分母 $(\omega_1^{\mathsf T}\omega_2)^2-1=0$，也正好在提醒这一点。
+
+读图时按三步看：① 蓝点 c 沿蓝色圆走，它是 p 先绕 x 轴转 θ₂ 的位置；红点是 c 再绕 z 轴转 θ₁ 的结果；
+② 两个空心圆点是两个圆的交点 z₊、z₋，只有 c 落在交点上，红点才可能转回 q；
+③ 先点“解 1”看 θ₂=45°、θ₁=90° 的红点落到 q，再点“解 2”看另一组解——同一个 q 对应两个中间点，这正是子问题 2 的两支。
+
+</Prose>
+
+<Raw html={w07_2} />
+
+<Prose>
+
+<Box warn title="常见错误">
+
+- 忘记两轴必须相交。两轴不相交时“中间点 $z$”同时落在两个圆柱面上，子问题 2 的公式不适用，本课不要求；考试若给不相交轴，要写一句“需另做处理”。
+- $\gamma$ 开方只取正支。丢掉的是另一个交点，也就是另一组肩肘角，回代验算会发现少了一组答案。
+- 求出 $z$ 后不回代，直接猜角度。$z$ 只是中间点，$\theta_2$ 要把 $u$ 转到 $z$、$\theta_1$ 要把 $v$ 转回 $z$，两次都要用子问题 1 各解一次。
+- 把 $\omega_1\times\omega_2$ 写成 $\omega_2\times\omega_1$。$\gamma$ 整体反号，两支解互换，回代原方程会失败。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- 子问题 2 的几何条件是“两个圆相交”，这两个圆各以什么为轴、半径是多少？
+- 为什么解出 $\alpha,\beta$ 之后，$\gamma$ 只剩一个平方值、要开方出两支？
+- 求出 $z$ 之后，$\theta_2$ 和 $\theta_1$ 分别用哪条方程解？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="07.3" t="子问题 3：旋转到给定距离" en="SUB 3 · ROTATE TO A DISTANCE">
+<Prose>
+
+### <span className="k">1</span> 场景：肘关节决定腕心到肩的距离
+
+逆解走到肘关节时，问题从“把某个点转到某个点”变成“把某个点转到离另一个点指定距离的地方”，子问题 3 就是为这种只知道距离的方程准备的。例如平面 2R 的肘角 $\theta_2$ 决定腕心到肩的距离 $r$：目标要求腕心离肩 $1.6$ m，问肘角取多少；写成方程就是 $\lVert e^{\hat\xi\theta}p-q\rVert=\delta$，其中 $\delta=1.6$ m 是题目给出的目标距离。把 $\delta$ 当成已知量，方程里就只剩一个未知角 $\theta$，这正是子问题 3 的标准形状。
+
+```math
+\lVert e^{\hat\xi\theta}p-q\rVert=\delta
+```
+
+07.1 要求“落点重合”，这里只要求“距离等于 $\delta$”，条件宽松了，解一般从一个变成两个：以 $q$ 为圆心、$\delta$ 为半径的球面与 $p$ 的旋转圆相交，一般有两个交点，关于“轴到 $q$ 的垂线”对称。所以子问题 3 的答案天然带 $\pm$，漏掉一支就漏掉一半构型；考试里这一支常常就是让你画“肘上/肘下”两种图的那一半分。算之前先把“距离”写出来，再去看它对应哪两个位置；这一步想清楚，后面套公式只是照做。
+
+与 07.1 一样，先把轴的位置减掉：取轴上一点 $r$，$u=p-r$、$v=q-r$，方程变成 $\lVert e^{\hat\xi\theta}u-v\rVert=\delta$。轴过不过原点不影响 $\delta$，因为减 $r$ 只是把两边的原点都搬到轴上，两个点的相对距离没有变。这一步之后，剩下的问题可以全部放进“沿轴”和“垂直轴”两个方向里算。
+
+### <span className="k">2</span> 直觉：先扣掉沿轴的那一段
+
+把 $\lVert e^{\hat\omega\theta}u-v\rVert^2$ 展开：减掉轴上的点之后，$e^{\hat\xi\theta}u$ 就是绕单位向量 $\omega$ 的纯旋转 $e^{\hat\omega\theta}u$，它只改变垂直分量，沿轴分量转完还是它自己。因此距离的平方可以拆成“沿轴差的平方”加上“垂直平面内差的平方”：沿轴那一项的平方是 $(\omega^{\mathsf T}(u-v))^2$，它与 $\theta$ 无关，可以先从 $\delta^2$ 里扣掉。这一步在物理上等于承认“轴方向上的高度差已经对齐，剩下的偏差只能靠转动来调整”。
+
+```math
+\delta'^2=\delta^2-\bigl(\omega^{\mathsf T}(u-v)\bigr)^2
+```
+
+扣完剩下的 $\delta'^2$ 就是垂直平面内旋转后两点距离的平方。在这个平面里，$u_\perp$ 绕轴转 $\theta$、$v_\perp$ 不动，问题变成“半径 $\lVert u_\perp\rVert$ 的圆上转一个角，使到 $v_\perp$ 的弦长为 $\delta'$”；这正是余弦定理能直接处理的形式。沿轴方向已经对齐的部分不随转角变，扣掉它之后，两个解对应圆周上到 $v_\perp$ 距离相等的两个点，它们关于“$u_\perp$ 与 $v_\perp$ 的角平分线”对称。
+
+如果 $\omega^{\mathsf T}(u-v)$ 的平方比 $\delta^2$ 还大，$\delta'^2$ 变成负数，说明两个点的轴向高度差已经超过了目标距离，沿轴方向补不回来。这种情况在代 $\arccos$ 之前就能发现，是“无解”的第一种信号；第二种信号是 $\arccos$ 的自变量绝对值超过 $1$，下面会看到。把这两个信号写在卷面上，比直接写角度更能说明答案为什么有或没有。
+
+### <span className="k">3</span> 公式：$\theta_0$ 对准方向，$\arccos$ 两边各偏一点
+
+先求 $\theta_0$，它把 $u_\perp$ 转到与 $v_\perp$ 同向（或反向）所需的角度，公式与 07.1 完全一样，只是把点换成了垂直分量：$\theta_0=\mathrm{atan2}\bigl(\omega^{\mathsf T}(u_\perp\times v_\perp),u_\perp^{\mathsf T}v_\perp\bigr)$。在 $\theta_0$ 这个位置，旋转后的 $u_\perp$ 与 $v_\perp$ 共线，弦长取到极值 $\bigl|\lVert u_\perp\rVert-\lVert v_\perp\rVert\bigr|$；如果目标距离恰好等于这个极值，两个解合并成一个。$\theta_0$ 的值只由 $u_\perp$ 与 $v_\perp$ 的方向决定，与 $\delta$ 无关；$\delta$ 只影响后面 $\arccos$ 的偏移量。
+
+```math
+\theta=\theta_0\pm\arccos\frac{\lVert u_\perp\rVert^2+\lVert v_\perp\rVert^2-\delta'^2}{2\lVert u_\perp\rVert\lVert v_\perp\rVert},\qquad
+\theta_0=\mathrm{atan2}\bigl(\omega^{\mathsf T}(u_\perp\times v_\perp),\;u_\perp^{\mathsf T}v_\perp\bigr)
+```
+
+真正的转角要从 $\theta_0$ 往两边各偏一个角度，偏移量由余弦定理给：把三角形 $u_\perp$、$v_\perp$、弦长 $\delta'$ 的三边关系写成余弦定理，得到 $\cos(\theta-\theta_0)$ 等于公式里的分式，于是 $\theta=\theta_0\pm\arccos(\cdot)$。这一步在物理上把“弦长要求”翻译成“从对准方向偏多少度”：$\arccos$ 的分子是两边平方和减弦平方，分母是两边之积的两倍，正是余弦定理的标准形状。把分子分母同时除以两边的长度，还能看出它是一个纯角度量，与长度单位无关。
+
+公式的物理读法可以分两半：$\theta_0$ 先把 $u_\perp$ 转到“离 $v_\perp$ 最近”的方向，$\arccos$ 项再把这个方向往两边各偏一个角度，所以两个解关于 $\theta_0$ 对称。$\arccos$ 的自变量必须在 $[-1,1]$ 内，超出就说明 $\delta'$ 比圆的直径还大或比两半径之差还小，目标不在可达范围内，方程无解；这个检查要在算角度之前做，它比角度本身更重要。两解、一解、无解三种情况在这里就分开了，后面的计算只是把角度写成数字。
+
+### <span className="k">4</span> 算例：平面 2R，腕心离肩 1.6 m
+
+把子问题 3 套到平面 2R 上：取肘轴为旋转轴，肘轴上一点取 $r_e=(1.3,0,0)$（单位 m，相当于第一根连杆的末端），$p$ 取 $\theta_2=0$ 时腕心的位置 $(2.3,0,0)$，$q$ 取肩点 $(0,0,0)$，$\delta=r=1.6$。此时 $u=p-r_e=(1.0,0,0)$ 就是第二根连杆，$v=q-r_e=(-1.3,0,0)$ 是第一根连杆的反方向，两个向量都在垂直平面内，所以 $\delta'=\delta=1.6$；又因为 $u_\perp$ 与 $v_\perp$ 反向平行，叉乘为零、点积为负，$\theta_0=180^\circ$。这个结果的几何图像很干净：两个向量反向，所以“对准方向”就是转到 $180^\circ$。
+
+先走一遍子问题 3 的通用公式。$\arccos$ 的分子是 $\lVert u_\perp\rVert^2+\lVert v_\perp\rVert^2-\delta'^2=1.0^2+1.3^2-1.6^2=0.13$，分母是 $2(1.0)(1.3)=2.6$，所以 $\arccos$ 的自变量是 $0.05$，偏移角为 $\arccos(0.05)=87.13^\circ$。于是 $\theta=180^\circ\pm87.13^\circ$，得到 $92.87^\circ$ 与 $267.13^\circ$；后者减去 $360^\circ$ 就是 $-92.87^\circ$，两组角关于 $\theta_0=180^\circ$ 对称。
+
+直接对三角形用余弦定理更快，结果完全相同。三角形的三边是 $l_1$、$l_2$ 与 $r$，夹角 $\theta_2$ 的对边就是 $r$；把余弦定理写出来代进数字即可。下面两个公式块把符号式和数值式一起写出来。
+
+```math
+\cos\theta_2=\frac{r^2-l_1^2-l_2^2}{2l_1l_2}=\frac{1.6^2-1.3^2-1.0^2}{2(1.3)(1.0)}=-0.05
+```
+
+```math
+\theta_2=\pm\arccos(-0.05)=\pm 92.87^\circ
+```
+
+两个算法给出一致的结果，因为 $180^\circ\mp87.13^\circ$ 的余弦都是 $-0.05$：先对准到 $180^\circ$ 再两边偏，与直接从余弦值取 $\pm\arccos$，是同一个三角形翻到两侧的两种写法。这里是 07.3 的 2R 数值，07.4 会把同一个余弦定理换成 $r=1.0$ 再用一次，$l_1=1.3$、$l_2=1.0$ 保持不变。记住这条对应关系，考试里用通用公式还是用余弦定理都不会算错。
+
+验算代回去：$l_1^2+l_2^2+2l_1l_2\cos\theta_2=1.69+1.0+2(1.3)(1.0)(-0.05)=2.69-0.13=2.56$，正好等于 $1.6^2$，腕心回到离肩 $1.6$ m 的位置。可达条件也检查一遍：$|l_1-l_2|=0.3\le1.6\le2.3=l_1+l_2$，目标落在环带内。两个角对应两组构型：肘关节落在肩—腕心连线上方的那组叫<strong>肘部朝上</strong>，落在下方的那组叫<strong>肘部朝下</strong>（elbow-up / elbow-down）；同一个腕心位置、两组肩肘角，这是多解最直观的来源。
+
+暂停一下。如果目标距离 $\delta$ 比可达距离还大，公式里 $\arccos$ 的自变量会怎样？先写下答案，再看下一节。答案：自变量会超出 $[-1,1]$，$\arccos$ 没有实数解，方程无解；这就是“目标在工作空间外”，写答案时要先写可达条件，再写角度。
+
+读图时按三步看：① 左图红点在单位圆上转，绿圈是满足“到 q′ 距离等于 δ′”的位置，正好两个；
+② 右图把整条距离曲线 d(θ) 画出来，δ 水平线与它交两点，对应两个转角；
+③ 拖 h 离开 0，看 δ′ 怎么变小、距离曲线怎么整体抬高；再拖 δ 让水平线移出曲线值域，交点就消失——这就是无解。
+
+</Prose>
+
+<Raw html={w07_3} />
+
+<Prose>
+
+<Box warn title="常见错误">
+
+- 忘扣沿轴分量，直接拿 $\delta$ 当 $\delta'$。轴不过旋转平面时，算出的角度会偏，回代距离对不上。
+- 把 $\theta_0$ 写成 $\arctan$。$\arctan$ 只返回 $(-\pi/2,\pi/2)$，会把反方向的解丢掉；$\theta_0$ 必须用 $\mathrm{atan2}$。
+- 只写一个解。$\arccos$ 的 $\pm$ 两支对应肘上、肘下两组构型，漏一支少一半答案。
+- 在 $\arccos$ 自变量超出 $[-1,1]$ 时硬算。这是无解信号，先检查 $\delta'^2$ 与 $2\lVert u_\perp\rVert\lVert v_\perp\rVert$ 的大小关系，再决定写不写角度。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- 子问题 3 的 $\delta'$ 里为什么要先扣掉 $\omega^{\mathsf T}(u-v)$？
+- $\theta_0$ 与 $\arccos$ 项各负责什么？为什么两解关于 $\theta_0$ 对称？
+- 平面 2R 的两解为什么对应肘部朝上、肘部朝下？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="07.4" t="分解路线与考试答法" en="DECOMPOSITION & EXAM ROUTE">
+<Prose>
+
+### <span className="k">1</span> 两条技巧：把关节从方程里消掉
+
+前面三个子问题都是单根轴或两根轴的小问题，整条机械臂的方程里却有五六个指数。把大方程化成子问题的，是两条技巧。技巧 1 选一个落在某根轴上的点：若 $p$ 在轴 $\xi$ 上，则 $e^{\hat\xi\theta}p=p$，方程里这个关节的指数作用在 $p$ 上变成恒等，未知角 $\theta$ 直接从方程里消失。典型用法是取腕心当这个点：腕部三根轴交于腕心，所以 $\theta_4,\theta_5,\theta_6$ 三个指数作用在腕心上都是恒等，整条臂的方程一下就只剩前三个关节。
+
+```math
+e^{\hat\xi\theta}p=p\quad(p\in l_\xi),\qquad
+g\,p_w=e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}e^{\hat\xi_3\theta_3}p_w
+```
+
+技巧 2 两边减去一个共同点，再用旋转保长把前面的指数赶出范数。若 $q$ 同时落在轴 $\xi_1$ 与 $\xi_2$ 上，把方程 $e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}e^{\hat\xi_3\theta_3}p=g\,p$ 两边减去 $q$：因为 $e^{\hat\xi_2\theta_2}q=q$、$e^{\hat\xi_1\theta_1}q=q$，左边变成 $e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}\bigl(e^{\hat\xi_3\theta_3}p-q\bigr)$，两个旋转只作用在括号里那个向量上。再两边取范数，旋转保长把前面两个指数从范数里消掉，只剩下一个未知角 $\theta_3$。
+
+```math
+\bigl\lVert e^{\hat\xi_3\theta_3}p-q\bigr\rVert=\lVert g\,p-q\rVert=\delta
+```
+
+这一步在物理上做的是“把距离当成观测量”：整条臂把 $p$ 送到 $g\,p$，这个落点到固定点 $q$ 的距离在转动过程中可以被前面的关节改变，但减去 $q$ 再取范数之后，前面那些绕 $q$ 的旋转对距离没有贡献。两条技巧的分工很清楚：技巧 1 选点让某些指数变成恒等，技巧 2 选点让某些指数从范数里消失；考试里先看图上有哪些轴相交，再决定用哪一条。两条技巧都要求点选得准：一个必须落在轴上，一个必须是两轴交点，选错点两条技巧都会失效。
+
+### <span className="k">2</span> 肘型 6R：四步路线与八组解
+
+肘型 6R 的标准解法是把上面两条技巧串成四步。第一步，取腕心 $p_w$ 当 $p$，技巧 1 消掉后三个腕关节，得到 $g\,p_w=e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}e^{\hat\xi_3\theta_3}p_w$，其中 $g$ 是目标位姿、$\theta_1,\theta_2,\theta_3$ 是肩部和肘部三个角。第二步，两边减去肩点（$\xi_1$ 与 $\xi_2$ 轴的交点）再取范数，技巧 2 把前两个指数赶出范数，得到 $\bigl\lVert e^{\hat\xi_3\theta_3}p_w-q\bigr\rVert=\lVert g\,p_w-q\rVert=\delta$，用子问题 3 解 $\theta_3$。
+
+第三步，把 $\theta_3$ 代回 $e^{\hat\xi_1\theta_1}e^{\hat\xi_2\theta_2}\bigl(e^{\hat\xi_3\theta_3}p_w\bigr)=g\,p_w$，此时 $\xi_1$ 与 $\xi_2$ 两轴相交于肩点，正好是子问题 2 的条件，解出 $\theta_1,\theta_2$。第四步，用已经解出的三个角把方程搬到腕部：两边依次左乘三个逆指数，得到 $e^{\hat\xi_4\theta_4}e^{\hat\xi_5\theta_5}e^{\hat\xi_6\theta_6}=e^{-\hat\xi_3\theta_3}e^{-\hat\xi_2\theta_2}e^{-\hat\xi_1\theta_1}g_1$，取一个不在腕轴上的点用子问题 2 解 $\theta_4,\theta_5$，最后用子问题 1 解 $\theta_6$。每一步的方程都只含一个或两个未知角，所以解出来就能立刻代回，不会攒下未知量。
+
+这条路线每一步都吃掉一个或两个关节，顺序不能换：腕心必须在解肩肘之前算出来，因为技巧 1 要用腕心；子问题 3 必须在子问题 2 之前，因为范数方程里只剩下 $\theta_3$。多解也在每一步里产生：子问题 3 给两支（肘部朝上、朝下），肩部子问题 2 给两支，腕部再给两支，乘起来最多 $2\times2\times2=8$ 组。考试写答案时，<strong>只写一组解</strong>会被直接扣掉一半分，正确做法是先写“最多八组”，再把每一支来自哪一步说清楚。
+
+### <span className="k">3</span> 五自由度：2024 Q3(b) 的六步答法
+
+2024 Q3(b) 的机械臂有五个关节：基座偏转 $\theta_1$、肩 $\theta_2$、肘 $\theta_3$、腕部两轴 $\theta_4,\theta_5$（两轴交于腕心），题面给的输入是工具原点位置 $p$ 与接近向量 $\hat z_t$。五个未知角对五个约束（位置 3 个、方向 2 个），正好配平，所以答法可以写成一串确定的步骤，用不着数值迭代。下面六步按执行顺序排好，前一步的结果就是后一步的输入。答题顺序固定成六步：
+
+1. 先算腕心：$p_w=p-a_4\hat z_t$，其中 $a_4$ 是工具原点到腕心的距离（题给的连杆参数，单位 m），$\hat z_t$ 是工具系 $z$ 轴在空间系里的单位方向；这一步把“工具尖”换成腕部真正绕转的中心。
+2. 由 $p_w$ 的水平投影定基座角：$\theta_1=\mathrm{atan2}(p_{wy},p_{wx})$；若 $p_w$ 落在基座 $z$ 轴上，水平投影为零，$\theta_1$ 可以取任意值，要单独写一句退化说明。
+3. 在臂平面内求肩到腕心的距离 $r=\lVert p_w-s\rVert$（$s$ 是肩点，单位 m），用子问题 3 的余弦定理解肘角 $\theta_3$，两个解对应肘部朝上、朝下。
+4. 用子问题 1 把“肘的方向”转到“腕心的方向”，解肩角 $\theta_2$：腕心方向角 $\varphi_w=\mathrm{atan2}(y_w,x_w)$ 由臂平面坐标 $(x_w,y_w)$ 给出，三角形内角 $\beta$ 由余弦定理给出，$\theta_2=\varphi_w\mp\beta$。
+5. 把 $\theta_1,\theta_2,\theta_3$ 代回剩下的姿态方程，用子问题 2 解腕部两角 $\theta_4,\theta_5$。
+6. 最后写多解与无解判断：肘部朝上/朝下乘腕部翻转，最多八组；目标超过 $l_1+l_2$ 或小于 $|l_1-l_2|$ 时无解。
+
+这六步里第一步最容易被跳过，但它决定了后面所有角度是否可用：题目给的是工具原点的位置，而臂和腕的角度对应的是腕心，$a_4\hat z_t$ 就是两者之间的偏移。$\hat z_t$ 是方向，$a_4$ 是长度，所以这个偏移向量一步就能写出来；把 $p_w$ 算错，后面每一步都会跟着错，而且错得很像“公式没问题、数字对不上”。考试写答案时把 $p_w$ 的算式写在最前面，阅卷人一眼就能看到你把工具原点换成了腕心。
+
+暂停一下。如果腕心恰好落在基座 $z$ 轴上（$p_{wx}=p_{wy}=0$），第 2 步的 $\theta_1$ 还唯一吗？先写下答案，再看数值算例。答案：不唯一，水平投影为零时任意 $\theta_1$ 都给出同一个腕心，这一位形是退化的，答题时要写明“$\theta_1$ 任意，其余角度按臂平面内的 $r$ 正常解”。
+
+### <span className="k">4</span> 算例：把 $(0.8,0.6)$ 从腕心算回两组肩肘角
+
+取 07.3 那台臂，$l_1=1.3$ m、$l_2=1.0$ m，目标腕心相对肩落在臂平面的 $(0.8,0.6)$，长度单位 m。先算子问题 3 需要的距离：$r=\sqrt{0.8^2+0.6^2}=1.0$，它落在可达环带 $0.3\le r\le2.3$ 内，所以肘部有两支。代入余弦定理，$\cos\theta_3=\bigl(1.0^2-1.3^2-1.0^2\bigr)/\bigl(2(1.3)(1.0)\bigr)=-1.69/2.6=-0.65$，于是 $\theta_3=\pm\arccos(-0.65)=\pm130.54^\circ$。
+
+```math
+\cos\theta_3=\frac{r^2-l_1^2-l_2^2}{2l_1l_2}=\frac{1.0^2-1.3^2-1.0^2}{2(1.3)(1.0)}=-0.65
+```
+
+```math
+\theta_3=\pm\arccos(-0.65)=\pm130.54^\circ
+```
+
+再用子问题 1 解肩角。腕心的方向角是 $\varphi_w=\mathrm{atan2}(0.6,0.8)=36.87^\circ$；三角形里肩到腕心这条边与第一根连杆的夹角是 $\beta=\arccos\bigl[(r^2+l_1^2-l_2^2)/(2rl_1)\bigr]=\arccos(1.69/2.6)=\arccos0.65=49.46^\circ$。把腕心方向“减去”肘部张开的角度就是肩角，所以 $\theta_2=\varphi_w\mp\beta$，给出 $\theta_2=36.87^\circ-49.46^\circ=-12.59^\circ$ 与 $\theta_2=36.87^\circ+49.46^\circ=86.33^\circ$ 两组。
+
+```math
+\varphi_w=\mathrm{atan2}(0.6,0.8)=36.87^\circ,\qquad
+\beta=\arccos\frac{r^2+l_1^2-l_2^2}{2rl_1}=\arccos0.65=49.46^\circ
+```
+
+两组角配对要一起写：$(\theta_2,\theta_3)=(-12.59^\circ,130.54^\circ)$ 与 $(86.33^\circ,-130.54^\circ)$，前一组肘部朝下、后一组肘部朝上。把两组都代进正运动学验算，腕心位置由 $l_1\cos\theta_2+l_2\cos(\theta_2+\theta_3)$ 与 $l_1\sin\theta_2+l_2\sin(\theta_2+\theta_3)$ 给出，下面两个公式块是这两条式子的数值结果。如果哪一组代进去对不上，说明 $\theta_3$ 的符号与 $\theta_2$ 的配对弄反了。
+
+```math
+l_1\cos\theta_2+l_2\cos(\theta_2+\theta_3)=0.80,\qquad
+l_1\sin\theta_2+l_2\sin(\theta_2+\theta_3)=0.60
+```
+
+两组都回到 $(0.80,0.60)$，说明多解来自“三角形翻面”：把肘关节翻到肩—腕心连线的另一侧，腕心位置不变，肩角和肘角都换成另一组值。07.3 用的是 $r=1.6$、这里用的是 $r=1.0$，同一个余弦定理换一个 $\delta$；考试里 $r$ 由 $p_w$ 算出来，并不由题面直接给出，这一步就是 07.4 第 3 小节第 3 步的实际操作。考试里这两组角要写成两个并列的答案，每一组后面注明肘部朝上还是朝下。
+
+### <span className="k">5</span> 读图：两个解从哪来
+
+下面这张图把 07.4 前四步里的“长度翻译成角度”缩成平面 2R 的版本：红色臂形是肘部朝上的那一支（$\theta_2$ 取负），灰色虚线是肘部朝下的那一支（$\theta_2$ 取正），两支的末端都落在同一个目标点上。读图时按三步看：① 拖动目标点，观察红、灰两组臂形如何分居“肩—目标”连线的两侧；② 把目标拖到半径大于 $l_1+l_2=2.3$ 的虚线圆外，看面板里的“无解”提示；③ 把 $x$ 调到 $0.80$、$y$ 调到 $0.60$，核对面板里的 $\theta_2=\pm130.54^\circ$ 与 $\theta_1$ 的两组值是否和上面算例一致。图里的红灰两种颜色对应上面第 4 小节的两组角，拖动目标时两组角同时更新。图是从基座看的两连杆，图里的 $\theta_2$ 是 07.4 的肘角 $\theta_3$、图里的 $\theta_1$ 是 07.4 的肩角 $\theta_2$，数字一一对应。
+
+第 ③ 步是这张图和 07.4 算例之间的桥：图里的两个滑块直接给出臂平面坐标，面板里的 $\theta_1$、$\theta_2$ 是 07.4 第 4 小节算出的两组角；数字对上，说明余弦定理与子问题 1 的走法没有记错。把目标拖到环带外时，程序只画目标点和两个虚线圆，面板写无解；这个状态对应 07.3 里“$\arccos$ 自变量超出 $[-1,1]$”的那条判断，两者是同一件事的图形版与代数版。拖动时面板里的 $r$ 会实时更新，可以直接对照 07.3 的可达条件 $|l_1-l_2|\le r\le l_1+l_2$。
+
+</Prose>
+
+<Raw html={w07_4} />
+
+<Prose>
+
+<Box warn title="常见错误">
+
+- 只写一组解。肘部朝上与朝下、腕部翻转各是一支，6R 最多八组，漏写直接丢分。
+- 取点没取在轴上，关节没消掉。技巧 1 的前提是 $p$ 落在轴上，取错点会让方程里多出未知角。
+- 把“子问题 3 的两个解”当成“两组独立解”。它只给出肘部两支，肩部和腕部还各有分支，要乘起来才是总组数。
+- 把弧度量与角度量混用。$\mathrm{atan2}$、$\arccos$ 返回弧度，答题写度要乘 $180^\circ/\pi$；混用会让答案差一个数量级。
+
+</Box>
+
+<Box title="离开本节前，合上文字回答">
+
+- 子问题 1/2/3 各自的有解条件是什么？
+- 为什么取腕心能消掉腕部三个关节？技巧 1 的前提是什么？
+- 2024 Q3(b) 的答题顺序前三步是什么？为什么第一步不能跳过？
+
+</Box>
+
+</Prose>
+</Section>
+
+<Section n="07.5" t="小测" en="CHECK">
+<Prose>
+
+<strong>规则。</strong>三题分别检查子问题 1 的公式形式、子问题 3 的余弦定理计算、子问题 2 的退化情形。每题做完立刻给反馈，解析里会指出该回看的小节；错一题就回去把那一段重读一遍，再回来做，不要只看答案。
+
+</Prose>
+
+<div className="quiz">
+  <div className="q" data-q="1">
+    <div className="qhead"><span className="qn">Q1</span><span className="qt">子问题 1 的转角公式是？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\theta=\arccos\dfrac{u_\perp^{\mathsf T}v_\perp}{\lVert u_\perp\rVert\lVert v_\perp\rVert}$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\theta=\mathrm{atan2}\bigl(\omega^{\mathsf T}(u_\perp\times v_\perp),\;u_\perp^{\mathsf T}v_\perp\bigr)$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q1" /></span>$\theta=\mathrm{atan2}\bigl(u_\perp^{\mathsf T}v_\perp,\;\omega^{\mathsf T}(u_\perp\times v_\perp)\bigr)$</label>
+    </div>
+    <div className="explain" data-for="1"></div>
+  </div>
+
+  <div className="q" data-q="2">
+    <div className="qhead"><span className="qn">Q2</span><span className="qt">平面 2R，$l_1=l_2=1$，目标 $(1,1)$，$\theta_2$ 等于？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$0^\circ$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$\pm45^\circ$</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q2" /></span>$\pm90^\circ$</label>
+    </div>
+    <div className="explain" data-for="2"></div>
+  </div>
+
+  <div className="q" data-q="3">
+    <div className="qhead"><span className="qn">Q3</span><span className="qt">两轴重合时，子问题 2 的解是什么情况？</span></div>
+    <div className="opts">
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>只有 $\theta_1+\theta_2$ 确定，单独两个角有无穷多解</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>无解</label>
+      <label className="opt"><span className="tick"><input type="radio" name="q3" /></span>唯一解</label>
+    </div>
+    <div className="explain" data-for="3"></div>
+  </div>
+
+  <div className="score"><span className="big" id="scoreNum">0</span><span className="of">/ 3 · 答对即刻计入</span></div>
+</div>
+</Section>

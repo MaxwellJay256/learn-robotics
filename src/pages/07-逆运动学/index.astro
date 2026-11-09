@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import meta from '../../data/meta.json';
+import { neighbours } from '../../data/chapters.js';
+import Content from '../../content/07.mdx';
+
+const m = meta['07'];
+const { prev, next } = neighbours('07-逆运动学');
+---
+
+<Base
+  kicker={m.kicker}
+  title={m.title}
+  en={m.en}
+  meta={m.meta}
+  prev={prev}
+  next={next}
+  footerNote="Patchouli · 大图书馆课件工坊 · 07 课 · 2026-11"
+>
+  <Content />
+</Base>
+
+<script>
+  import '../../scripts/ch07.js';
+</script>

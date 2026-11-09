@@ -79,6 +79,29 @@ J_s=\begin{bmatrix}\xi_1' & \xi_2' & \cdots & \xi_n'\end{bmatrix}.
 \xi_2=(0,-l_1,0;\,0,0,1).
 ```
 
+根据指数积公式，
+$$
+e^{\hat\xi_1\theta_1} = \begin{bmatrix}
+\cos\theta_1 & -\sin\theta_1 & 0 & 0\\
+\sin\theta_1 & \cos\theta_1 & 0 & 0\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1
+\end{bmatrix}.
+$$
+
+所以
+$$
+\mathrm{Ad}_{e^{\hat\xi_1\theta_1}} =
+\begin{bmatrix}
+\cos\theta_1 & -\sin\theta_1 & 0 & 0 & 0 & 0\\
+\sin\theta_1 & \cos\theta_1 & 0 & 0 & 0 & 0\\
+0 & 0 & 1 & 0 & 0 & 0\\
+0 & 0 & 0 & \cos\theta_1 & -\sin\theta_1 & 0\\
+0 & 0 & 0 & \sin\theta_1 & \cos\theta_1 & 0\\
+0 & 0 & 0 & 0 & 0 & 1
+\end{bmatrix}.
+$$
+
 第 2 列要被 $e^{\hat\xi_1\theta_1}$ 搬一次。这是一个绕 $z$ 轴转 $\theta_1$ 的纯旋转；$\omega=(0,0,1)$ 正好沿转轴，所以角速度部分不变，只有线速度部分被转动：
 
 ```math
@@ -160,6 +183,9 @@ J_s=\mathrm{Ad}_{g_{st}}\,J_b.
 - 如果题目问物体速度，先算 $J_s$ 还是 $J_b$？为什么？
 
 </Box>
+
+通常来讲，$J_s$ 和 $J_b$ 应该先算 $J_s$，因为正运动学推导的直接结果是 g_st，$J_s$ 的列公式也直接用指数积；
+求 $J_b$ 时，借刚才的结果得出 $\mathrm{Ad}_{g_{st}}$，再左乘 $J_s$ 就得到了 $J_b$。
 
 </Prose>
 </Section>

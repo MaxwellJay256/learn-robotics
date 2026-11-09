@@ -22,12 +22,18 @@ export const chapters = [
     no: '06', slug: '06-正运动学', title: '正运动学',
     kw: '指数积公式 · 关节旋量 · 零位形', reg: 'K11–K12', status: 'done',
   },
-  { no: '07', title: '逆运动学', kw: '子问题法 · 解的存在与多解', reg: 'K10–K11', status: 'todo' },
+  {
+    no: '07', slug: '07-逆运动学', title: '逆运动学',
+    kw: '子问题 1/2/3 · 分解路线 · 多解', reg: 'K14–K18', status: 'done',
+  },
   {
     no: '08', slug: '08-雅可比与奇异', title: '雅可比与奇异',
     kw: '列公式 · 物体雅可比 · 降秩', reg: 'K19–K22', status: 'done',
   },
-  { no: '09', title: '轨迹规划', kw: '插值 · 时间律 · 关节空间与任务空间', reg: 'K14–K15', status: 'todo' },
+  {
+    no: '09', slug: '09-轨迹规划', title: '轨迹规划',
+    kw: 'LFPB · 经由点 · Cubic', reg: 'K24–K26', status: 'done',
+  },
 ];
 
 export const written = chapters.filter(c => c.status === 'done');

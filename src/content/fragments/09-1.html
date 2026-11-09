@@ -1,0 +1,34 @@
+<div class="work">
+  <div>
+    <div class="canvasbox">
+      <canvas id="cv1" width="860" height="520"></canvas>
+      <div class="cap"><span>两段 LFPB · 位置 / 速度 / 加速度</span><span class="hint">拖工具条改加速度与段时长</span></div>
+    </div>
+    <div class="toolbar">
+      <button id="btnQ4" class="primary">2024 Q4 数据（5°→10°→20°, td=1s, a=80）</button>
+      <span class="tlabel">加速度 θ̈_b</span>
+      <input class="range" id="acc" type="range" min="60" max="200" step="1" value="80">
+      <b class="val" id="accv">80°/s²</b>
+      <span class="tlabel">每段时长 t_d</span>
+      <input class="range" id="td" type="range" min="0.6" max="1.6" step="0.05" value="1">
+      <b class="val" id="tdv">1.00 s</b>
+      <button id="btnSingle">单段示例（0°→30°）</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pblock">
+      <div class="plabel"><span>直线速度 θ̇₁₂ / θ̇₂₃</span><span class="val" id="thetaVal">—</span></div>
+      <div class="eq"><span class="mathout" id="thetaOut"></span></div>
+      <p class="note">平台速度 = 位移 ÷（段时长 − 半个混合时间），不是两点连线的平均斜率。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>三个混合时间 t₁ / t₂ / t₃</span><span class="val" id="blendVal">—</span></div>
+      <div class="eq"><span class="mathout" id="blendOut"></span></div>
+      <p class="note">t₁、t₃ 先由起点段、终点段解出；t₂ 要等两段直线速度都算完，最后算。</p>
+    </div>
+    <div class="pblock">
+      <div class="plabel"><span>状态</span><span class="val">status</span></div>
+      <p class="note" id="stat">—</p>
+    </div>
+  </div>
+</div>
